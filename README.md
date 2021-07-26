@@ -1,4 +1,4 @@
-# Casper virtual scroller
+# Casper select lit
 
 A casper-select made in lit
 
