@@ -1,0 +1,26 @@
+{
+  "name": "@cloudware-casper/casper-select-lit",
+  "main": "casper-select-lit.js",
+  "version": "0.0.1",
+  "description": "A casper-select made in lit",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/"
+  },
+  "scripts": {
+    "start": "web-dev-server --open demo/ --node-resolve",
+    "start:watch": "web-dev-server --open demo/ --node-resolve --watch"
+  },
+  "dependencies": {
+    "@cloudware-casper/casper-icons": "^2.7.3",
+    "@cloudware-casper/casper-virtual-scroller": "^0.0.1",
+    "@polymer/paper-input": "^3.2.1",
+    "@popperjs/core": "^2.9.2",
+    "popper-max-size-modifier": "^0.2.0",
+    "lit": "^2.0.0-rc.2",
+    "wc-epic-spinners": "^1.0.2"
+  },
+  "devDependencies": {
+    "@web/dev-server": "^0.1.18",
+    "@webcomponents/webcomponentsjs": "^2.5.0"
+  }
+}
