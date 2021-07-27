@@ -30,10 +30,10 @@
   dependencies:
     "@polymer/polymer" "^3.x"
 
-"@cloudware-casper/casper-virtual-scroller@^0.0.1":
-  version "0.0.1"
-  resolved "https://npm.pkg.github.com/download/@cloudware-casper/casper-virtual-scroller/0.0.1/94305dd3cb9f2caa9bc226f16805b41c946094dd746ed9d33c0c40d43617e6fe#752329ed97b5c04bd9489fb2faf5f585914a8fa7"
-  integrity sha512-mmmlDPGRAEP3+3WjlKEa1Z0WpcTQz1E0RWGX+vmn9/862Wc2UmgN44CDV+PASPq7eowvnzXqJ0R2er2JSXHH7w==
+"@cloudware-casper/casper-virtual-scroller@^0.0.x":
+  version "0.0.2"
+  resolved "https://npm.pkg.github.com/download/@cloudware-casper/casper-virtual-scroller/0.0.2/35185badfef7e898f6f5c49ec5b06c54ca6a7b527bac76c606a987a0a7daf69e#3df527765a1926e5d79776b6b87ea092e77c35dc"
+  integrity sha512-w+S2A+dwPEoSAjfMQyPiyqEY7K6aoPkF39RumjOqiMQAw+j1GQ6RDTBe6P5lsZw2XBd1i3xqsrNsyP6RvqIvaA==
   dependencies:
     lit "^2.0.0-rc.2"
 

@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@cloudware-casper/casper-icons": "^2.7.3",
-    "@cloudware-casper/casper-virtual-scroller": "^0.0.1",
+    "@cloudware-casper/casper-virtual-scroller": "^0.0.x",
     "@polymer/paper-input": "^3.2.1",
     "@polymer/paper-spinner": "^3.0.2",
     "@popperjs/core": "^2.9.2",
