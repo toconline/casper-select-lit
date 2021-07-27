@@ -23,14 +23,14 @@
     chalk "^2.0.0"
     js-tokens "^4.0.0"
 
-"@cloudware-casper/casper-icons@^2.7.3":
+"@cloudware-casper/casper-icons@^2.x":
   version "2.7.3"
   resolved "https://npm.pkg.github.com/download/@cloudware-casper/casper-icons/2.7.3/b017b327390ea425c3eb5b0a33830c98a5921a7c82e5303cae39a6fe63a4e1fa#2ca45f54c9fc43029ce6bece0e4aa961d41a1128"
   integrity sha512-H78RCXvey8P9RLZsm+nAjd4cxMncBQrSNN916GbcL9VaRGAN13Z4wPiIF1izdsWqFdtEYns28CMgHiFC2FeWTQ==
   dependencies:
     "@polymer/polymer" "^3.x"
 
-"@cloudware-casper/casper-virtual-scroller@^0.0.x":
+"@cloudware-casper/casper-virtual-scroller@^0.x":
   version "0.0.2"
   resolved "https://npm.pkg.github.com/download/@cloudware-casper/casper-virtual-scroller/0.0.2/35185badfef7e898f6f5c49ec5b06c54ca6a7b527bac76c606a987a0a7daf69e#3df527765a1926e5d79776b6b87ea092e77c35dc"
   integrity sha512-w+S2A+dwPEoSAjfMQyPiyqEY7K6aoPkF39RumjOqiMQAw+j1GQ6RDTBe6P5lsZw2XBd1i3xqsrNsyP6RvqIvaA==
@@ -117,7 +117,7 @@
     "@polymer/iron-meta" "^3.0.0-pre.26"
     "@polymer/polymer" "^3.0.0"
 
-"@polymer/paper-input@^3.2.1":
+"@polymer/paper-input@^3.x":
   version "3.2.1"
   resolved "https://registry.yarnpkg.com/@polymer/paper-input/-/paper-input-3.2.1.tgz#0fd0d30de3b43ba7d2c8d5d76f870d257b667ebf"
   integrity sha512-6ghgwQKM6mS0hAQxQqj+tkeEY1VUBqAsrasAm8V5RpNcfSWQC/hhRFxU0beGuKTAhndzezDzWYP6Zz4b8fExGg==
@@ -130,7 +130,7 @@
     "@polymer/paper-styles" "^3.0.0-pre.26"
     "@polymer/polymer" "^3.0.0"
 
-"@polymer/paper-spinner@^3.0.2":
+"@polymer/paper-spinner@^3.x":
   version "3.0.2"
   resolved "https://registry.yarnpkg.com/@polymer/paper-spinner/-/paper-spinner-3.0.2.tgz#c857c79f0494bc74e9ae293839d00f37fcf29f78"
   integrity sha512-XUzu8/4NH+pnNZUTI2MxtOKFAr0EOsW7eGhTg3VBhTh7DDW/q3ewzwYRWnqNJokX9BEnxKMiXXaIeTEBq4k2dw==
