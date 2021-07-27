@@ -1,15 +1,14 @@
 import { LitElement, html, css, unsafeCSS } from 'lit';
 import '@polymer/paper-input/paper-input.js';
+import '@polymer/paper-spinner/paper-spinner.js';
 import '@cloudware-casper/casper-icons/casper-icon.js';
 import '@cloudware-casper/casper-virtual-scroller/casper-virtual-scroller.js';
 
 import CasperPopoverBehaviour from './casper-popover-behaviour.js';
-import 'wc-epic-spinners';
 
 class CasperSelectLit extends LitElement {
   static styles = css`
     :host {
-      background-color:yellow;
       height: fit-content;
     }
     .spinner-container {
@@ -26,9 +25,17 @@ class CasperSelectLit extends LitElement {
     .cs-input-icon {
       cursor: pointer;
     }
+    .spinner {
+
+    }
     #cvs {
-      background: #efefef;
       overflow: auto;
+      border: 1px solid #AAA;
+      box-sizing: border-box;
+      background-color: white;
+      border-radius: 0 0 3px 3px;
+      transition: width 250ms linear;
+      box-shadow: rgb(25 59 103 / 5%) 0px 0px 0px 1px, rgb(28 55 90 / 16%) 0px 2px 6px -1px, rgb(28 50 79 / 38%) 0px 8px 24px -4px;
     }
     #cvs[open] {
     }
@@ -37,6 +44,9 @@ class CasperSelectLit extends LitElement {
   static get properties() {
     return {
       value: {
+        type: String
+      },
+      label: {
         type: String
       },
       minHeight: {
@@ -182,13 +192,28 @@ class CasperSelectLit extends LitElement {
     }
   }
 
+  updated (changedProperties) {
+    if (changedProperties.has('fitInto')) {
+      // Fit into has changed, update popover
+      this._popover.fitInto = this.fitInto;
+      this._popover.maxWidth = (this.maxWidth || this.fitInto.getBoundingClientRect().width);
+      this._popover.resetOpts();
+    }
+  }
+
   /*
    * Clears the input
    */
-  clearValue () {
+  clearValue (event) {
     this.value = undefined;
     this._cvs.selectedItem = undefined;
+    this._searchValue = undefined;
+    this._searchInput.value = this._searchValue;
+
+    this._popover.hide();
     this.requestUpdate();
+    this.blur();
+    event.stopPropagation();
   }
 
   /*
@@ -483,10 +508,15 @@ class CasperSelectLit extends LitElement {
    */
   _setupPopover () {
     this.fitInto = this.fitInto || this.parentElement || document.documentElement;
-    this.minWidth = (this.minWidth || this._searchInput.getBoundingClientRect().width); // Minimum width is the input width
-    this.maxWidth = this.maxWidth || this.fitInto.getBoundingClientRect().width;
 
-    this._popover = new CasperPopoverBehaviour(this._searchInput, this._cvs, this.fitInto, {minWidth: this.minWidth, minHeight: this.minHeight, maxWidth: this.maxWidth});
+    this._popover = new CasperPopoverBehaviour(this._searchInput,
+                                               this._cvs,
+                                               this.fitInto,
+                                               {
+                                                 minWidth: (this.minWidth || this._searchInput.getBoundingClientRect().width),
+                                                 maxWidth: (this.maxWidth || this.fitInto.getBoundingClientRect().width),
+                                                 minHeight: this.minHeight
+                                               });
 
     this._popover.flipped = (placement) => {
       // Callback when popover changes from below the input to above the input
@@ -498,6 +528,9 @@ class CasperSelectLit extends LitElement {
 
       // When popover opens restore search value
       this._searchInput.value = this._searchValue;
+
+      // Reset minimum list width to be the same as the input width
+      this._popover.minWidth = (this.minWidth || this._searchInput.getBoundingClientRect().width);
 
       if (!this._dataReady) {
         // First time opening the popover setup data
@@ -536,6 +569,7 @@ class CasperSelectLit extends LitElement {
         this._searchInput.value = '';
       }
       this.requestUpdate();
+      this.blur();
     };
   }
 
@@ -641,41 +675,46 @@ class CasperSelectLit extends LitElement {
       }
     });
 
-    // Highlighting
-    if (this.highlight && !this.renderLine) {
-      this.renderLine = (cs, item) => {
-        let highlightValue = cs._searchValue;
-        const renderHighlight = (highlightValue) => {
-                                        const replacedName = item[this.textProp].replace(highlightValue, '__CS2HERE__');
-                                        const splitName = replacedName.split('__CS2HERE__');
-                                        return html`${splitName[0]}<span class="cvs-item-highlight">${highlightValue}</span>${splitName[1]}`;
-                                      };
-        return html`
-          <style>
-            .cvs-item-highlight {
-              border: 1px solid #CCC;
-              font-weight: bold;
-              border-radius: 4px;
-            }
-          </style>
-          <span>
-            ${(highlightValue && item[this.textProp] && item[this.textProp].includes(highlightValue))
-              ? renderHighlight(highlightValue)
-              : item[this.textProp]
-            }
-          </span>
-        `;
-      };
-      // TODO: dunno why we need to bind(this, this) to get acecss to cs2 inside renderLine
-      this.renderLine = this.renderLine.bind(this, this);
-    }
+    this.renderLine = this.renderLine.bind(this, this);
+  }
+
+  renderLine (cs, item) {
+    let highlightValue = cs._searchValue;
+    const renderHighlight = (highlightValue) => {
+                                    const replacedName = item[this.textProp].replace(highlightValue, '__CS2HERE__');
+                                    const splitName = replacedName.split('__CS2HERE__');
+                                    return html`${splitName[0]}<span class="cvs-item-highlight">${highlightValue}</span>${splitName[1]}`;
+                                  };
+    return html`
+      <style>
+        .cvs-item-highlight {
+          border: 1px solid #CCC;
+          font-weight: bold;
+          border-radius: 4px;
+        }
+        .item-row:hover {
+          background-color: gray;
+          color: white;
+          cursor: pointer;
+        }
+        .item-row[active] {
+          background-color: yellow;
+        }
+      </style>
+      <span>
+        ${(highlightValue && item[this.textProp] && item[this.textProp].includes(highlightValue) && this.highlight)
+          ? renderHighlight(highlightValue)
+          : item[this.textProp]
+        }
+      </span>
+    `;
   }
 
   render() {
     return html`
       <div class="main-container" style="width: ${this.width}px">
         ${this.customInput ? '' : html `
-          <paper-input id="cs-input">
+          <paper-input label="${this.label}" id="cs-input">
             <div slot="suffix" class="cs-suffix-icons">
               ${this.value !== undefined ? html`<casper-icon @click="${this.clearValue}" class="cs-input-icon" icon="fa-light:times"></casper-icon>` : ''}
               <casper-icon @click="${this.togglePopover}" class="cs-input-icon" icon="${this._csInputIcon}"></casper-icon>
@@ -693,11 +732,12 @@ class CasperSelectLit extends LitElement {
           .renderLine="${this.renderLine}"
           .startIndex="${this._initialIdx}"
           .unsafeRender="${this.unsafeRender}"
+          .renderNoItems="${this.renderNoItems}"
           .renderPlaceholder="${this.renderPlaceholder}">
         </casper-virtual-scroller>
         ${this.loading ?
           html` <div class="spinner-container">
-                  <flower-spinner></flower-spinner>
+                  <paper-spinner class="spinner" active></paper-spinner>
                 </div>
           ` : ''}
       </div>

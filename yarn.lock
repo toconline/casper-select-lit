@@ -130,6 +130,14 @@
     "@polymer/paper-styles" "^3.0.0-pre.26"
     "@polymer/polymer" "^3.0.0"
 
+"@polymer/paper-spinner@^3.0.2":
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/@polymer/paper-spinner/-/paper-spinner-3.0.2.tgz#c857c79f0494bc74e9ae293839d00f37fcf29f78"
+  integrity sha512-XUzu8/4NH+pnNZUTI2MxtOKFAr0EOsW7eGhTg3VBhTh7DDW/q3ewzwYRWnqNJokX9BEnxKMiXXaIeTEBq4k2dw==
+  dependencies:
+    "@polymer/paper-styles" "^3.0.0-pre.26"
+    "@polymer/polymer" "^3.0.0"
+
 "@polymer/paper-styles@^3.0.0-pre.26":
   version "3.0.1"
   resolved "https://registry.yarnpkg.com/@polymer/paper-styles/-/paper-styles-3.0.1.tgz#bd4962b83ab8432cd1cf197bb5222d3a08f135e1"
@@ -1254,11 +1262,6 @@ vary@^1.1.2:
   version "1.1.2"
   resolved "https://registry.yarnpkg.com/vary/-/vary-1.1.2.tgz#2299f02c6ded30d4a5961b0b9f74524a18f634fc"
   integrity sha1-IpnwLG3tMNSllhsLn3RSShj2NPw=
-
-wc-epic-spinners@^1.0.2:
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/wc-epic-spinners/-/wc-epic-spinners-1.0.2.tgz#1ae1499764cf93a866c0606f208eaf3f045c3e3d"
-  integrity sha512-xcy2pZ4QKEayLNjr6VwI87M/PGXlrURdYAVpTAW5EfuyjpXtJzLRAoUOLR6YPwGsWzet76pvOrZSNlyYw3jBHg==
 
 webidl-conversions@^6.1.0:
   version "6.1.0"

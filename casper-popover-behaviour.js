@@ -14,14 +14,19 @@ export default class CasperPopoverBehaviour {
     this.element = element;
     this.fitInto = (fitInto || target.parentElement);
 
-    this._opts = this.getPopperOpts((customOpts.minWidth || 100),
-                                    (customOpts.minHeight || 100),
-                                    customOpts.maxWidth,
-                                    customOpts.maxHeight);
+    this.padding = customOpts.padding     || 10;
+    this.placement = customOpts.placement || 'bottom';
+    this.strategy =  customOpts.strategy  || 'fixed';
+    this.minWidth = customOpts.minWidth   || 100;
+    this.minHeight = customOpts.minHeight || 100;
+    this.maxWidth = customOpts.maxWidth;
+    this.maxHeight  = customOpts.maxHeight;
+
+    this._opts = this.getPopperOpts();
     this.popperInstance = createPopper(this.target, this.element, this._opts);
 
     this.eventCloseFunc = (event) => {
-      if (event.composedPath().includes(this.target)) {
+      if (event.composedPath().includes(this.target) && !this.open) {
         this.show();
       } else if (!event.composedPath().includes(this.element)) {
         this.hide();
@@ -38,35 +43,47 @@ export default class CasperPopoverBehaviour {
     document.removeEventListener("click", this.eventCloseFunc);
   }
 
-  getPopperOpts (minWidth, minHeight, maxWidth, maxHeight) {
-    let flipFunc = (state) => {
+  getPopperOpts () {
+    const maxSizeFunc = (state) => {
+      const {width, height} = state.modifiersData.maxSize;
+      if (state.rects.popper.width > this.minWidth) this.minWidth = state.rects.popper.width;
+
+      state.styles.popper = {
+        ...state.styles.popper,
+        minWidth: `${this.minWidth - (this.padding)}px`,
+        maxWidth: `${this.maxWidth - (this.padding)}px`,
+        maxHeight:`${(this.maxHeight || Math.max(this.minHeight, height))}px`,
+      };
+    };
+
+    const flipFunc = (state) => {
       if (state.placement !== 'bottom') {
         this.flipped(state.placement);
       }
     }
-    flipFunc = flipFunc.bind(this);
 
     return {
-      placement: 'bottom',
+      strategy: this.strategy,
+      placement: this.placement,
       modifiers: [
         {
           name: 'flip',
           options: {
-            // fallbackPlacements: ['bottom-end','bottom-start','top','top-end','top-start'],
             boundary: this.fitInto
           },
         },
         {
           name: 'preventOverflow',
           options: {
-            boundary: this.fitInto
+            boundary: this.fitInto,
+            padding: this.padding
           },
         },
         {
           ...maxSize,
           options: {
             boundary: this.fitInto,
-            padding: 10
+            padding: this.padding
           }
         },
         {
@@ -75,16 +92,7 @@ export default class CasperPopoverBehaviour {
           enabled: true,
           requires: ['maxSize'],
           fn({state}) {
-            const {width, height} = state.modifiersData.maxSize;
-            // maxWidth = Math.max(maxWidth,state.modifiersData.maxSize.width) || state.modifiersData.maxSize.width;
-            if (state.rects.popper.width > minWidth) minWidth = state.rects.popper.width;
-
-            state.styles.popper = {
-              ...state.styles.popper,
-              minWidth: `${minWidth}px`,
-              maxWidth: `${maxWidth}px`,
-              maxHeight:`${(maxHeight || Math.max(minHeight, height))}px`,
-            };
+            maxSizeFunc(state);
           }
         },
         {
@@ -97,6 +105,10 @@ export default class CasperPopoverBehaviour {
         }
       ]
     };
+  }
+
+  async resetOpts () {
+    await this.popperInstance.setOptions(this.getPopperOpts());
   }
 
   async update () {

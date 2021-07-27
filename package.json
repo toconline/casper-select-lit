@@ -14,10 +14,10 @@
     "@cloudware-casper/casper-icons": "^2.7.3",
     "@cloudware-casper/casper-virtual-scroller": "^0.0.1",
     "@polymer/paper-input": "^3.2.1",
+    "@polymer/paper-spinner": "^3.0.2",
     "@popperjs/core": "^2.9.2",
-    "popper-max-size-modifier": "^0.2.0",
     "lit": "^2.0.0-rc.2",
-    "wc-epic-spinners": "^1.0.2"
+    "popper-max-size-modifier": "^0.2.0"
   },
   "devDependencies": {
     "@web/dev-server": "^0.1.18",
