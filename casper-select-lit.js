@@ -1,6 +1,5 @@
 import { LitElement, html, css, unsafeCSS } from 'lit';
 import '@polymer/paper-input/paper-input.js';
-import '@polymer/paper-spinner/paper-spinner.js';
 import '@cloudware-casper/casper-icons/casper-icon.js';
 import '@cloudware-casper/casper-virtual-scroller/casper-virtual-scroller.js';
 
@@ -11,22 +10,11 @@ class CasperSelectLit extends LitElement {
     :host {
       height: fit-content;
     }
-    .spinner-container {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background-color: #efefef;
-      padding-bottom: 20px;
-      padding-top: 20px;
-    }
     .cs-suffix-icons {
       display: inline-flex;
     }
     .cs-input-icon {
       cursor: pointer;
-    }
-    .spinner {
-
     }
     #cvs {
       overflow: auto;
@@ -100,6 +88,12 @@ class CasperSelectLit extends LitElement {
       highlight: {
         type: Boolean
       },
+      disableClear: {
+        type: Boolean
+      },
+      loading: {
+        type: Boolean
+      },
       lazyLoadFilterFields: {
         type: Array
       },
@@ -167,7 +161,7 @@ class CasperSelectLit extends LitElement {
 
   constructor () {
     super();
-    this._csInputIcon = 'fa-solid:sort-down';
+    this._csInputIcon = 'fa-regular:angle-down';
     this._dataReady = false;
     this.loading = false;
 
@@ -198,6 +192,10 @@ class CasperSelectLit extends LitElement {
       this._popover.fitInto = this.fitInto;
       this._popover.maxWidth = (this.maxWidth || this.fitInto.getBoundingClientRect().width);
       this._popover.resetOpts();
+    }
+
+    if (changedProperties.has('initialId') && this._lazyload) {
+      this._initialIdChanged();
     }
   }
 
@@ -524,7 +522,7 @@ class CasperSelectLit extends LitElement {
     };
     this._popover.opened = async () => {
       // Callback when popover is opened
-      this._csInputIcon = 'fa-solid:sort-up';
+      this._csInputIcon = 'fa-regular:angle-up';
 
       // When popover opens restore search value
       this._searchInput.value = this._searchValue;
@@ -555,7 +553,7 @@ class CasperSelectLit extends LitElement {
     };
     this._popover.closed = () => {
       // Callback when popover is closed
-      this._csInputIcon = 'fa-solid:sort-down';
+      this._csInputIcon = 'fa-regular:angle-down';
 
       // When popover closes clear search input if no value
       if (this.value !== undefined) {
@@ -594,6 +592,13 @@ class CasperSelectLit extends LitElement {
       }
     });
 
+    await this._initialIdChanged();
+
+    this._requested = false;
+    this._requestQueue = undefined;
+  }
+
+  async _initialIdChanged () {
     if (this.initialId !== undefined) {
       // Set initial value
       this.setValue(this.initialId);
@@ -623,9 +628,6 @@ class CasperSelectLit extends LitElement {
         }
       }
     }
-
-    this._requested = false;
-    this._requestQueue = undefined;
   }
 
   async _updateScroller () {
@@ -716,7 +718,7 @@ class CasperSelectLit extends LitElement {
         ${this.customInput ? '' : html `
           <paper-input label="${this.label}" id="cs-input">
             <div slot="suffix" class="cs-suffix-icons">
-              ${this.value !== undefined ? html`<casper-icon @click="${this.clearValue}" class="cs-input-icon" icon="fa-light:times"></casper-icon>` : ''}
+              ${this.value !== undefined && !this.disableClear ? html`<casper-icon @click="${this.clearValue}" class="cs-input-icon" icon="fa-light:times"></casper-icon>` : ''}
               <casper-icon @click="${this.togglePopover}" class="cs-input-icon" icon="${this._csInputIcon}"></casper-icon>
             </div>
           </paper-input>
@@ -726,6 +728,7 @@ class CasperSelectLit extends LitElement {
           delaySetup
           .items="${this.items}"
           .height="${this.height}"
+          ?loading="${this.loading}"
           .lineCss="${this.lineCss}"
           .textProp="${this.textProp}"
           .dataSize="${this._dataLength}"
@@ -735,11 +738,6 @@ class CasperSelectLit extends LitElement {
           .renderNoItems="${this.renderNoItems}"
           .renderPlaceholder="${this.renderPlaceholder}">
         </casper-virtual-scroller>
-        ${this.loading ?
-          html` <div class="spinner-container">
-                  <paper-spinner class="spinner" active></paper-spinner>
-                </div>
-          ` : ''}
       </div>
     `;
   }

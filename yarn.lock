@@ -23,18 +23,20 @@
     chalk "^2.0.0"
     js-tokens "^4.0.0"
 
-"@cloudware-casper/casper-icons@^2.x":
-  version "2.7.3"
-  resolved "https://npm.pkg.github.com/download/@cloudware-casper/casper-icons/2.7.3/b017b327390ea425c3eb5b0a33830c98a5921a7c82e5303cae39a6fe63a4e1fa#2ca45f54c9fc43029ce6bece0e4aa961d41a1128"
-  integrity sha512-H78RCXvey8P9RLZsm+nAjd4cxMncBQrSNN916GbcL9VaRGAN13Z4wPiIF1izdsWqFdtEYns28CMgHiFC2FeWTQ==
+"@cloudware-casper/casper-icons@^3.x":
+  version "3.0.1"
+  resolved "https://npm.pkg.github.com/download/@cloudware-casper/casper-icons/3.0.1/7dd566454cb1b028110ed261bd4d2e55c720c50328f6154001f78010a19e2a59#dfb91ae5c03be34c8fc82684b1fe0a159c07f881"
+  integrity sha512-KLJgdGyowJssXvOTUqDm/PIHiz22eGfMdd3dtovRNk0B/Io26HBgc2+7FTbT7qO+wcpq+0O+WBGnsKuzpBGNaQ==
   dependencies:
-    "@polymer/polymer" "^3.x"
+    "@polymer/paper-ripple" "^3.0.2"
+    lit "^2.0.0-rc.2"
 
 "@cloudware-casper/casper-virtual-scroller@^0.x":
-  version "0.0.2"
-  resolved "https://npm.pkg.github.com/download/@cloudware-casper/casper-virtual-scroller/0.0.2/35185badfef7e898f6f5c49ec5b06c54ca6a7b527bac76c606a987a0a7daf69e#3df527765a1926e5d79776b6b87ea092e77c35dc"
-  integrity sha512-w+S2A+dwPEoSAjfMQyPiyqEY7K6aoPkF39RumjOqiMQAw+j1GQ6RDTBe6P5lsZw2XBd1i3xqsrNsyP6RvqIvaA==
+  version "0.0.3"
+  resolved "https://npm.pkg.github.com/download/@cloudware-casper/casper-virtual-scroller/0.0.3/3fc4f9b256ce021773d4055c7bb5ac1b8afafeb6c3f27183246acc8e6ce07f57#825788f73233e25187395d8927628650a674e35f"
+  integrity sha512-q0VmuCiDuBzn/VUy/u4X3f3tnnHQKWmwk59VmNYhEQEVwGFSl7+LAs+oknBZFPJoyUuf6Cf4+KN3v2iXTNpHHQ==
   dependencies:
+    "@polymer/paper-spinner" "^3.x"
     lit "^2.0.0-rc.2"
 
 "@lit/reactive-element@^1.0.0-rc.2":
@@ -130,6 +132,14 @@
     "@polymer/paper-styles" "^3.0.0-pre.26"
     "@polymer/polymer" "^3.0.0"
 
+"@polymer/paper-ripple@^3.0.2":
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/@polymer/paper-ripple/-/paper-ripple-3.0.2.tgz#52566f5ee367942022ceaa991368105d21403de5"
+  integrity sha512-DnLNvYIMsiayeICroYxx6Q6Hg1cUU8HN2sbutXazlemAlGqdq80qz3TIaVdbpbt/pvjcFGX2HtntMlPstCge8Q==
+  dependencies:
+    "@polymer/iron-a11y-keys-behavior" "^3.0.0-pre.26"
+    "@polymer/polymer" "^3.0.0"
+
 "@polymer/paper-spinner@^3.x":
   version "3.0.2"
   resolved "https://registry.yarnpkg.com/@polymer/paper-spinner/-/paper-spinner-3.0.2.tgz#c857c79f0494bc74e9ae293839d00f37fcf29f78"
@@ -147,7 +157,7 @@
     "@polymer/iron-flex-layout" "^3.0.0-pre.26"
     "@polymer/polymer" "^3.0.0"
 
-"@polymer/polymer@^3.0.0", "@polymer/polymer@^3.x":
+"@polymer/polymer@^3.0.0":
   version "3.4.1"
   resolved "https://registry.yarnpkg.com/@polymer/polymer/-/polymer-3.4.1.tgz#333bef25711f8411bb5624fb3eba8212ef8bee96"
   integrity sha512-KPWnhDZibtqKrUz7enIPOiO4ZQoJNOuLwqrhV2MXzIt3VVnUVJVG5ORz4Z2sgO+UZ+/UZnPD0jqY+jmw/+a9mQ==
