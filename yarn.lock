@@ -32,9 +32,9 @@
     lit "^2.0.0-rc.2"
 
 "@cloudware-casper/casper-virtual-scroller@^0.x":
-  version "0.0.3"
-  resolved "https://npm.pkg.github.com/download/@cloudware-casper/casper-virtual-scroller/0.0.3/3fc4f9b256ce021773d4055c7bb5ac1b8afafeb6c3f27183246acc8e6ce07f57#825788f73233e25187395d8927628650a674e35f"
-  integrity sha512-q0VmuCiDuBzn/VUy/u4X3f3tnnHQKWmwk59VmNYhEQEVwGFSl7+LAs+oknBZFPJoyUuf6Cf4+KN3v2iXTNpHHQ==
+  version "0.0.4"
+  resolved "https://npm.pkg.github.com/download/@cloudware-casper/casper-virtual-scroller/0.0.4/4cf30bfe3f0b8f85bf66e956180fa1fc1458435fb104f26261e76090b299c693#97e78bc0f16d142003ee1e9a96783d710c82638e"
+  integrity sha512-biYf22RIUd1UeKSb7yH9ltTeKQTHyp6lBSnvbURoHPWHPCmiZNdg/qjhjBta1RR5MEiUX58+yoN5A5gOFuq23w==
   dependencies:
     "@polymer/paper-spinner" "^3.x"
     lit "^2.0.0-rc.2"
@@ -416,9 +416,9 @@
     parse5 "^6.0.1"
 
 "@webcomponents/shadycss@^1.9.1":
-  version "1.10.2"
-  resolved "https://registry.yarnpkg.com/@webcomponents/shadycss/-/shadycss-1.10.2.tgz#40e03cab6dc5e12f199949ba2b79e02f183d1e7b"
-  integrity sha512-9Iseu8bRtecb0klvv+WXZOVZatsRkbaH7M97Z+f+Pt909R4lDfgUODAnra23DOZTpeMTAkVpf4m/FZztN7Ox1A==
+  version "1.11.0"
+  resolved "https://registry.yarnpkg.com/@webcomponents/shadycss/-/shadycss-1.11.0.tgz#73e289996c002d8be694cd3be0e83c46ad25e7e0"
+  integrity sha512-L5O/+UPum8erOleNjKq6k58GVl3fNsEQdSOyh0EUhNmi7tHUyRuCJy1uqJiWydWcLARE5IPsMoPYMZmUGrz1JA==
 
 "@webcomponents/webcomponentsjs@^2.5.0":
   version "2.5.0"

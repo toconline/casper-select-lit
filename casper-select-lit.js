@@ -194,7 +194,7 @@ class CasperSelectLit extends LitElement {
       this._popover.resetOpts();
     }
 
-    if (changedProperties.has('initialId') && this._lazyload) {
+    if (changedProperties.has('initialId')) {
       this._initialIdChanged();
     }
   }
@@ -406,15 +406,8 @@ class CasperSelectLit extends LitElement {
   }
 
   async _filterItems () {
-    if (this._lazyload && this.lazyLoadFilterFields && this._dataReady) {
-      // Lazyload filtering
+    if ((!this._lazyload || this.lazyLoadFilterFields) && this._dataReady) {
       this._debouncedFilter();
-    } else if (!this._lazyload && this._dataReady) {
-      // Normal filtering
-      this.items = this._initialItems.filter(item => item[this.textProp].includes(this._searchValue));
-      this._dataLength = this.items.length;
-
-      await this._updateScroller();
     }
   }
 
@@ -561,7 +554,7 @@ class CasperSelectLit extends LitElement {
           this._searchInput.value = this._freshItems.filter(e=>e.id == this.value)[0]?.[this.textProp];
           if (this._searchInput.value === undefined) this._searchInput.value = this._inputString;
         } else {
-          this._searchInput.value = this.items.filter(e=>e.id == this.value)[0]?.[this.textProp];
+          this._searchInput.value = this._initialItems.filter(e=>e.id == this.value)[0]?.[this.textProp];
         }
       } else {
         this._searchInput.value = '';
@@ -602,29 +595,41 @@ class CasperSelectLit extends LitElement {
     if (this.initialId !== undefined) {
       // Set initial value
       this.setValue(this.initialId);
-      try {
-        await this.updateComplete;
 
-        // TODO: inject id more gracefuly
-        const response = await this.socket.jget(`${this.lazyLoadResource}/${this.value}`, 3000);
-        this._inputString = response.data?.[this.textProp];
-        this._searchInput.value = response.data?.[this.textProp];
-      } catch (error) {
-        // TODO solve issue with socket 2 connecting state
-        if (error.code == 11) {
-          setTimeout(async () => {
-            try {
-              const response = await this.socket.jget(`${this.lazyLoadResource}/${this.value}`, 3000);
-              this._inputString = response.data?.[this.textProp];
-              this._searchInput.value = response.data?.[this.textProp];
-            } catch (error) {
-              debugger;
-              console.error(error);
-            }
-          }, 200);
-        } else {
-          debugger;
-          console.error(error);
+      if (this._lazyload) {
+        try {
+          await this.updateComplete;
+
+          // TODO: inject id more gracefuly
+          const response = await this.socket.jget(`${this.lazyLoadResource}/${this.value}`, 3000);
+          this._inputString = response.data?.[this.textProp];
+          this._searchInput.value = response.data?.[this.textProp];
+        } catch (error) {
+          // TODO solve issue with socket 2 connecting state
+          if (error.code == 11) {
+            setTimeout(async () => {
+              try {
+                const response = await this.socket.jget(`${this.lazyLoadResource}/${this.value}`, 3000);
+                this._inputString = response.data?.[this.textProp];
+                this._searchInput.value = response.data?.[this.textProp];
+              } catch (error) {
+                debugger;
+                console.error(error);
+              }
+            }, 200);
+          } else {
+            debugger;
+            console.error(error);
+          }
+        }
+      } else {
+        for (let idx = 0; idx < this.items.length; idx++) {
+          if (this.items[idx].id === this.initialId) {
+            this._initialIdx = idx;
+            this._inputString = this.items[idx][this.textProp];
+            this._searchInput.value = this.items[idx][this.textProp];
+            break;
+          }
         }
       }
     }
@@ -638,6 +643,14 @@ class CasperSelectLit extends LitElement {
     await this._cvs.updateComplete;
     await this._popover.update();
   }
+
+  _specialRegex (value) {
+    const chars = ['aáàãäâ', 'eéèëê', 'iíìïî', 'oóòõöô', 'uúùüû', 'cç'];
+    for (const i in chars) {
+      value = value.replace(new RegExp('[' + chars[i] + ']', 'g'), '[' + chars[i] + ']');
+    }
+    return new RegExp(value, 'i');
+  };
 
   /*
    * Lit function thats called when component finishes the first render
@@ -654,18 +667,15 @@ class CasperSelectLit extends LitElement {
     if (this._lazyload) {
       this._setupLazyLoad();
     } else {
-      if (this.initialId !== undefined) {
-        this.setValue(this.initialId);
+      this._initialIdChanged();
 
-        for (let idx = 0; idx < this.items.length; idx++) {
-          if (this.items[idx].id === this.initialId) {
-            this._initialIdx = idx;
-            this._inputString = this.items[idx][this.textProp];
-            this._searchInput.value = this.items[idx][this.textProp];
-            break;
-          }
-        }
-      }
+      this._debouncedFilter = this._debounce(async () => {
+        // Normal filtering
+        this.items = this._initialItems.filter(item => item[this.textProp].search(this._specialRegex(this._searchValue)) > -1);
+        this._dataLength = this.items.length;
+        await this._updateScroller();
+      }, 250);
+
       this._dataLength = this.items.length;
     }
 
@@ -681,12 +691,14 @@ class CasperSelectLit extends LitElement {
   }
 
   renderLine (cs, item) {
-    let highlightValue = cs._searchValue;
+    const highlightValue = cs._searchValue;
     const renderHighlight = (highlightValue) => {
-                                    const replacedName = item[this.textProp].replace(highlightValue, '__CS2HERE__');
-                                    const splitName = replacedName.split('__CS2HERE__');
-                                    return html`${splitName[0]}<span class="cvs-item-highlight">${highlightValue}</span>${splitName[1]}`;
-                                  };
+                              const highlightRegex = this._specialRegex(highlightValue);
+                              highlightValue = item[this.textProp].match(highlightRegex)[0]
+                              const replacedName = item[this.textProp].replace(highlightRegex, '__CS2HERE__');
+                              const splitName = replacedName.split('__CS2HERE__');
+                              return html`${splitName[0]}<span class="cvs-item-highlight">${highlightValue}</span>${splitName[1]}`;
+                            };
     return html`
       <style>
         .cvs-item-highlight {
@@ -694,17 +706,26 @@ class CasperSelectLit extends LitElement {
           font-weight: bold;
           border-radius: 4px;
         }
+        .item-row {
+          font-size: 14px;
+        }
         .item-row:hover {
-          background-color: gray;
+          background-color: var(--primary-color);
           color: white;
           cursor: pointer;
         }
         .item-row[active] {
-          background-color: yellow;
+          background-color: var(--dark-primary-color);
+          color: white;
+        }
+        .item-row[active]:hover {
+          background-color: var(--primary-color);
+          color: white;
+          cursor: pointer;
         }
       </style>
       <span>
-        ${(highlightValue && item[this.textProp] && item[this.textProp].includes(highlightValue) && this.highlight)
+        ${(highlightValue && item[this.textProp] && (item[this.textProp].search(this._specialRegex(highlightValue)) > -1) && this.highlight)
           ? renderHighlight(highlightValue)
           : item[this.textProp]
         }

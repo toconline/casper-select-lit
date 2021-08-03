@@ -6,21 +6,21 @@ export default class CasperPopoverBehaviour {
 	constructor (target, element, fitInto, customOpts={}) {
 
     this.flipped = () => {};
-    this.opened = () => {};
-    this.closed = () => {};
-    this.open = false;
+    this.opened  = () => {};
+    this.closed  = () => {};
 
-    this.target = target;
+    this.open    = false;
+    this.target  = target;
     this.element = element;
     this.fitInto = (fitInto || target.parentElement);
 
-    this.padding = customOpts.padding     || 10;
+    this.padding   = customOpts.padding   || 10;
     this.placement = customOpts.placement || 'bottom';
-    this.strategy =  customOpts.strategy  || 'fixed';
-    this.minWidth = customOpts.minWidth   || 100;
+    this.strategy  = customOpts.strategy  || 'fixed';
+    this.minWidth  = customOpts.minWidth  || 100;
     this.minHeight = customOpts.minHeight || 100;
-    this.maxWidth = customOpts.maxWidth;
-    this.maxHeight  = customOpts.maxHeight;
+    this.maxWidth  = customOpts.maxWidth;
+    this.maxHeight = customOpts.maxHeight;
 
     this._opts = this.getPopperOpts();
     this.popperInstance = createPopper(this.target, this.element, this._opts);
@@ -57,7 +57,7 @@ export default class CasperPopoverBehaviour {
     };
 
     const flipFunc = (state) => {
-      if (state.placement !== 'bottom') {
+      if (state.placement !== this.placement) {
         this.flipped(state.placement);
       }
     }
