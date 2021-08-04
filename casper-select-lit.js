@@ -538,6 +538,7 @@ class CasperSelectLit extends LitElement {
 
           } else {
             // If we are not lazyloading we should have the item in memory
+            this._cvs.selectedItem = this.value;
             this._cvs.scrollToId(this.value);
           }
         }
@@ -560,7 +561,6 @@ class CasperSelectLit extends LitElement {
         this._searchInput.value = '';
       }
       this.requestUpdate();
-      this.blur();
     };
   }
 
@@ -680,11 +680,17 @@ class CasperSelectLit extends LitElement {
     }
 
     this._searchInput.addEventListener('input', this._userInput.bind(this));
-    this._cvs.addEventListener('cvs-line-clicked', (event) => {
+    this._cvs.addEventListener('cvs-line-selected', (event) => {
       if (event && event.detail) {
         this._inputString = event.detail.name;
         this.setValue(event.detail.id);
       }
+    });
+
+    this._searchInput.addEventListener('keydown', async (event) => {
+      await this._popover.show();
+      // Forward event to cvs
+      this._cvs.dispatchEvent(new KeyboardEvent('keydown', {key: event.key}));
     });
 
     this.renderLine = this.renderLine.bind(this, this);

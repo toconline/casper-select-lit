@@ -25,22 +25,32 @@ export default class CasperPopoverBehaviour {
     this._opts = this.getPopperOpts();
     this.popperInstance = createPopper(this.target, this.element, this._opts);
 
-    this.eventCloseFunc = (event) => {
+    this._eventCloseFunc = (event) => {
       if (event.composedPath().includes(this.target) && !this.open) {
         this.show();
       } else if (!event.composedPath().includes(this.element)) {
         this.hide();
       }
     };
-    this.eventCloseFunc = this.eventCloseFunc.bind(this);
-    document.addEventListener("click", this.eventCloseFunc);
+    this._eventCloseFunc = this._eventCloseFunc.bind(this);
+    document.addEventListener("click", this._eventCloseFunc);
 
+    this._closeOnEsc = (event) => {
+      if (event && event.key === 'Escape') {
+        this.hide();
+      }
+    };
+    this._closeOnEsc = this._closeOnEsc.bind(this);
+    document.addEventListener("keydown", this._closeOnEsc);
+
+    this._preventIronOverlayCanceled = (event) => {event.preventDefault()};
     this.element.style.display = 'none';
 	}
 
   clear () {
     this.popperInstance.destroy();
-    document.removeEventListener("click", this.eventCloseFunc);
+    document.removeEventListener("click", this._eventCloseFunc);
+    document.removeEventListener("keydown", this._closeOnEsc);
   }
 
   getPopperOpts () {
@@ -125,6 +135,9 @@ export default class CasperPopoverBehaviour {
 
       this.element.setAttribute('open', true);
 
+      // TODO: Do we need to deal with iron-overlay?
+      document.addEventListener("iron-overlay-canceled", this._preventIronOverlayCanceled);
+
       await this.popperInstance.update();
       this.opened();
     }
@@ -139,6 +152,9 @@ export default class CasperPopoverBehaviour {
       this.element.style.zIndex = 1;
 
       this.element.style.display = 'none';
+
+      // TODO: Do we need to deal with iron-overlay?
+      document.removeEventListener("iron-overlay-canceled", this._preventIronOverlayCanceled);
 
       this.closed();
     }
