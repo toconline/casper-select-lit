@@ -19,7 +19,6 @@ class CasperSelectLit extends LitElement {
     #cvs {
       overflow: auto;
       border: 1px solid #AAA;
-      box-sizing: border-box;
       background-color: white;
       border-radius: 0 0 3px 3px;
       transition: width 250ms linear;
@@ -74,9 +73,6 @@ class CasperSelectLit extends LitElement {
         type: String
       },
       sortColumn: {
-        type: String
-      },
-      parentColumn: {
         type: String
       },
       lineCss: {
@@ -378,7 +374,7 @@ class CasperSelectLit extends LitElement {
       console.time('subscribe');
 
       const subscribeData =  {idColumn: this.idColumn,
-                              parentColumn: this.parentColumn,
+                              parentColumn: 'NULL',
                               sortColumn: this.sortColumn};
 
       subscribeResponse = await this.socket.subscribeLazyload(this.lazyLoadResource, subscribeData, 15000);
@@ -387,7 +383,7 @@ class CasperSelectLit extends LitElement {
       debugger;
       console.error(error);
     }
-    this._dataLength = subscribeResponse.all_ids_size;
+    this._dataLength = subscribeResponse.user_ids_size;
     const activeId = subscribeResponse.user_first_id;
 
     if (this._dataLength > 0) {
@@ -459,7 +455,7 @@ class CasperSelectLit extends LitElement {
         // TODO: deal with subscribe errors
         console.error(error);
       }
-      this._dataLength = subscribeResponse.all_ids_size;
+      this._dataLength = subscribeResponse.user_ids_size;
 
       // Find the index of the initial id
       const initialIndex = await this._getIndexForId(+this.initialId);
