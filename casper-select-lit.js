@@ -696,6 +696,26 @@ class CasperSelectLit extends LitElement {
     } else {
       this._initialIdChanged();
 
+      if (!this.items) {
+        // If we don't have items and we are not lazyloading use classic HTML options
+        const options = this.querySelectorAll('option');
+        let tmpItems = [];
+        if (options.length > 0) {
+          options.forEach(item => {
+            if (item.value && item.innerText) {
+              tmpItems.push({id: item.value, name: item.innerText});
+            }
+          });
+        }
+        this.items = tmpItems;
+      } else if (this.items.length > 0 && typeof this.items[0] !== 'object') {
+        // If we are not using an array of objects use simple array with item index as id
+        for (let idx = 0; idx < this.items.length; idx++) {
+          const item = this.items[idx];
+          this.items[idx] = {id: idx+1, name: item};
+        }
+      }
+
       this._debouncedFilter = this._debounce(async () => {
         // Normal filtering
         this.items = this._initialItems.filter(item => this._includesNormalized(item[this.textProp],this._searchValue));
