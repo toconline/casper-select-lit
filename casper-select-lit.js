@@ -193,6 +193,10 @@ class CasperSelectLit extends LitElement {
     if (changedProperties.has('initialId')) {
       this._initialIdChanged();
     }
+
+    if (changedProperties.has('items')) {
+      this._itemsChanged();
+    }
   }
 
   /*
@@ -321,15 +325,15 @@ class CasperSelectLit extends LitElement {
         .filter(filterField => !Object.keys(this.lazyLoadCustomFilters || {}).includes(filterField.constructor === String ? filterField : filterField.field))
         .map(filterField => {
           if (filterField.constructor === String) {
-            return `${filterField}::TEXT ILIKE '%${escapedSearchInputValue}%'`;
+            return `unaccent(${filterField})::TEXT ILIKE unaccent('%${escapedSearchInputValue}%')`;
           }
 
           if (filterField.constructor === Object && filterField.field && filterField.filterType) {
             switch (filterField.filterType) {
-              case 'exact': return `${filterField.field}::TEXT ILIKE '${escapedSearchInputValue}'`;
-              case 'endsWith': return `${filterField.field}::TEXT ILIKE '%${escapedSearchInputValue}'`;
-              case 'contains': return `${filterField.field}::TEXT ILIKE '%${escapedSearchInputValue}%'`;
-              case 'startsWith': return `${filterField.field}::TEXT ILIKE '${escapedSearchInputValue}%'`;
+              case 'exact': return `unaccent(${filterField.field})::TEXT ILIKE unaccent('${escapedSearchInputValue}')`;
+              case 'endsWith': return `unaccent(${filterField.field})::TEXT ILIKE unaccent('%${escapedSearchInputValue}')`;
+              case 'contains': return `unaccent(${filterField.field})::TEXT ILIKE unaccent('%${escapedSearchInputValue}%')`;
+              case 'startsWith': return `unaccent(${filterField.field})::TEXT ILIKE unaccent('${escapedSearchInputValue}%')`;
             }
           }
         }).join(' OR ');
@@ -631,6 +635,12 @@ class CasperSelectLit extends LitElement {
     }
   }
 
+  async _itemsChanged () {
+    // Reset Width
+    // console.log('changing minwidth');
+    // this._popover.minWidth = (this.minWidth || this._searchInput.getBoundingClientRect().width);
+  }
+
   async _updateScroller () {
     console.log('-- Updating Scroller --');
     this.requestUpdate();
@@ -641,12 +651,16 @@ class CasperSelectLit extends LitElement {
   }
 
   _specialRegex (value) {
-    const chars = ['aáàãäâ', 'eéèëê', 'iíìïî', 'oóòõöô', 'uúùüû', 'cç'];
-    for (const i in chars) {
-      value = value.replace(new RegExp('[' + chars[i] + ']', 'g'), '[' + chars[i] + ']');
-    }
-    return new RegExp(value, 'i');
+    return new RegExp(this._normalizeValue(value), 'i');
   };
+
+  _includesNormalized (value, search) {
+    return (this._normalizeValue(value)).match(this._specialRegex(search));
+  }
+
+  _normalizeValue (value) {
+    return value.normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+  }
 
   /*
    * Lit function thats called when component finishes the first render
@@ -667,7 +681,7 @@ class CasperSelectLit extends LitElement {
 
       this._debouncedFilter = this._debounce(async () => {
         // Normal filtering
-        this.items = this._initialItems.filter(item => item[this.textProp].search(this._specialRegex(this._searchValue)) > -1);
+        this.items = this._initialItems.filter(item => this._includesNormalized(item[this.textProp],this._searchValue));
         this._dataLength = this.items.length;
         await this._updateScroller();
       }, 250);
@@ -695,11 +709,13 @@ class CasperSelectLit extends LitElement {
   renderLine (cs, item) {
     const highlightValue = cs._searchValue;
     const renderHighlight = (highlightValue) => {
-                              const highlightRegex = this._specialRegex(highlightValue);
-                              highlightValue = item[this.textProp].match(highlightRegex)[0]
-                              const replacedName = item[this.textProp].replace(highlightRegex, '__CS2HERE__');
+                              const normalizedValue = this._normalizeValue(item[this.textProp]);
+                              const indexOfHighlight = normalizedValue.search(this._specialRegex(highlightValue));
+                              const valueLength = this._normalizeValue(highlightValue).length;
+                              const originalHighlight = item[this.textProp].substr(indexOfHighlight, valueLength);
+                              const replacedName = item[this.textProp].replace(originalHighlight, '__CS2HERE__');
                               const splitName = replacedName.split('__CS2HERE__');
-                              return html`${splitName[0]}<span class="cvs-item-highlight">${highlightValue}</span>${splitName[1]}`;
+                              return html`${splitName[0]}<span class="cvs-item-highlight">${originalHighlight}</span>${splitName[1]}`;
                             };
     return html`
       <style>
@@ -727,7 +743,7 @@ class CasperSelectLit extends LitElement {
         }
       </style>
       <span>
-        ${(highlightValue && item[this.textProp] && (item[this.textProp].search(this._specialRegex(highlightValue)) > -1) && this.highlight)
+        ${(highlightValue && item[this.textProp] && this._includesNormalized(item[this.textProp],highlightValue) && this.highlight)
           ? renderHighlight(highlightValue)
           : item[this.textProp]
         }
