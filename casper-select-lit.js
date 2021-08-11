@@ -13,8 +13,24 @@ class CasperSelectLit extends LitElement {
     .cs-suffix-icons {
       display: inline-flex;
     }
-    .cs-input-icon {
+    .cs-down-icon {
+      width: 15px;
+      height: 15px;
       cursor: pointer;
+      transition: transform 0.25s linear;
+    }
+    .cs-down-icon-up {
+      transform: rotate(-180deg);
+    }
+    .cs-times-icon {
+      width: 15px;
+      height: 15px;
+      font-size: 0.3em;
+      cursor: pointer;
+      transition: transform 0.2s linear;
+    }
+    .cs-times-icon:hover {
+      transform: rotate(-90deg);
     }
     #cvs {
       overflow: auto;
@@ -157,7 +173,7 @@ class CasperSelectLit extends LitElement {
 
   constructor () {
     super();
-    this._csInputIcon = 'fa-regular:angle-down';
+    this._csInputIcon = 'cs-down-icon-down';
     this._dataReady = false;
     this.loading = false;
 
@@ -504,8 +520,8 @@ class CasperSelectLit extends LitElement {
                                                this._cvs,
                                                this.fitInto,
                                                {
-                                                 minWidth: (this.minWidth || this._searchInput.getBoundingClientRect().width),
-                                                 maxWidth: (this.maxWidth || this.fitInto.getBoundingClientRect().width),
+                                                 minWidth: this.minWidth,
+                                                 maxWidth: this.maxWidth,
                                                  minHeight: this.minHeight
                                                });
 
@@ -515,13 +531,15 @@ class CasperSelectLit extends LitElement {
     };
     this._popover.opened = async () => {
       // Callback when popover is opened
-      this._csInputIcon = 'fa-regular:angle-up';
+      this._csInputIcon = 'cs-down-icon-up';
 
       // When popover opens restore search value
-      this._searchInput.value = this._searchValue;
+      this._searchInput.value = this._searchValue === undefined ? '' : this._searchValue;
 
       // Reset minimum list width to be the same as the input width
+      // We wont have the final searchInput width in firstUpdated
       this._popover.minWidth = (this.minWidth || this._searchInput.getBoundingClientRect().width);
+      this._popover.initialMinWidth = this._popover.minWidth;
 
       if (!this._dataReady) {
         // First time opening the popover setup data
@@ -547,7 +565,7 @@ class CasperSelectLit extends LitElement {
     };
     this._popover.closed = () => {
       // Callback when popover is closed
-      this._csInputIcon = 'fa-regular:angle-down';
+      this._csInputIcon = 'cs-down-icon-down';
 
       // When popover closes clear search input if no value
       if (this.value !== undefined) {
@@ -635,10 +653,9 @@ class CasperSelectLit extends LitElement {
     }
   }
 
-  async _itemsChanged () {
+  _itemsChanged () {
     // Reset Width
-    // console.log('changing minwidth');
-    // this._popover.minWidth = (this.minWidth || this._searchInput.getBoundingClientRect().width);
+    this._popover.resetMinWidth = true;
   }
 
   async _updateScroller () {
@@ -757,8 +774,8 @@ class CasperSelectLit extends LitElement {
         ${this.customInput ? '' : html `
           <paper-input label="${this.label}" id="cs-input">
             <div slot="suffix" class="cs-suffix-icons">
-              ${this.value !== undefined && !this.disableClear ? html`<casper-icon @click="${this.clearValue}" class="cs-input-icon" icon="fa-light:times"></casper-icon>` : ''}
-              <casper-icon @click="${this.togglePopover}" class="cs-input-icon" icon="${this._csInputIcon}"></casper-icon>
+              ${this.value !== undefined && !this.disableClear ? html`<casper-icon @click="${this.clearValue}" class="cs-times-icon" icon="fa-light:times"></casper-icon>` : ''}
+              <casper-icon @click="${this.togglePopover}" class="cs-down-icon ${this._csInputIcon}" icon="fa-regular:angle-down"></casper-icon>
             </div>
           </paper-input>
         `}

@@ -9,18 +9,21 @@ export default class CasperPopoverBehaviour {
     this.opened  = () => {};
     this.closed  = () => {};
 
-    this.open    = false;
-    this.target  = target;
-    this.element = element;
-    this.fitInto = (fitInto || target.parentElement);
+    this.open          = false;
+    this.target        = target;
+    this.element       = element;
+    this.fitInto       = (fitInto || target.parentElement);
+    this.resetMinWidth = false;
 
     this.padding   = customOpts.padding   || 10;
     this.placement = customOpts.placement || 'bottom';
     this.strategy  = customOpts.strategy  || 'fixed';
-    this.minWidth  = customOpts.minWidth  || 100;
+    this.minWidth  = customOpts.minWidth  || this.target.getBoundingClientRect().width || 100;
     this.minHeight = customOpts.minHeight || 100;
-    this.maxWidth  = customOpts.maxWidth;
+    this.maxWidth  = customOpts.maxWidth  || this.fitInto.getBoundingClientRect().width;
     this.maxHeight = customOpts.maxHeight;
+
+    this.initialMinWidth = this.minWidth;
 
     this._opts = this.getPopperOpts();
     this.popperInstance = createPopper(this.target, this.element, this._opts);
@@ -56,7 +59,13 @@ export default class CasperPopoverBehaviour {
   getPopperOpts () {
     const maxSizeFunc = (state) => {
       const {width, height} = state.modifiersData.maxSize;
-      if (state.rects.popper.width > this.minWidth) this.minWidth = state.rects.popper.width;
+
+      if (this.resetMinWidth) {
+        this.minWidth = this.initialMinWidth;
+        this.resetMinWidth = false;
+      } else if (state.rects.popper.width > this.minWidth) {
+        this.minWidth = state.rects.popper.width;
+      }
 
       state.styles.popper = {
         ...state.styles.popper,
