@@ -182,6 +182,8 @@ class CasperSelectLit extends LitElement {
     this.textProp = 'name';
     this.dataSize = 100;
     this.minHeight = 200;
+
+    this._resubscribeAttempts = 10;
   }
 
   connectedCallback () {
@@ -250,6 +252,51 @@ class CasperSelectLit extends LitElement {
   }
 
   /*
+   * Subscribes a resource using table or jsonapi if we have filters
+   */
+  async _subscribeResource () {
+    let subscribeData =  { idColumn: this.idColumn,
+                           parentColumn: 'NULL',
+                           sortColumn: this.sortColumn };
+
+
+    if (this._searchValue === undefined || this._searchValue.trim() === '') {
+      this.lazyLoadResource = this._originalResource;
+      subscribeData.tableSchema = this.tableSchema;
+      subscribeData.tableName = this.tableName;
+      console.log(`Subscribing ${this.lazyLoadResource} using table`);
+    } else {
+      this.lazyLoadResource = this._applyFiltersURL();
+      console.log(`Subscribing ${this.lazyLoadResource} using jsonapi`);
+    }
+
+    try {
+      console.time('subscribe');
+      const subscribedResource = this.lazyLoadResource;  // Save subscribed resource
+      const subscribeResponse = await this.socket.subscribeLazyload(this.lazyLoadResource, subscribeData, 15000);
+      this._dataLength = subscribeResponse.user_ids_size;
+      subscribeResponse.resource = subscribedResource;
+      console.timeEnd('subscribe');
+      return subscribeResponse;
+    } catch (error) {
+      console.error(error);
+      console.timeEnd('subscribe');
+      return;
+    }
+  }
+
+  async _attemptResubscribe () {
+
+    this._resubscribeAttempts--;
+
+    console.log(`Session died, resubscribing... ${this._resubscribeAttempts} attempts left`);
+
+    if (this._resubscribeAttempts > 0) {
+      await this._subscribeResource();
+    }
+  }
+
+  /*
    * Gets called when users scrolls to fetch more items from the server
    */
   async _fetchItems (dir, index) {
@@ -263,15 +310,19 @@ class CasperSelectLit extends LitElement {
                               ratio: 1
                              };
       try {
-        const response = await this.socket.getLazyload(this.lazyLoadResource, requestPayload, 3000);
+        const response         = await this.socket.getLazyload(this.lazyLoadResource, requestPayload, 3000);
         const responseIncluded = response.included;
-        let responseData = response.data;
+        const responseData     = response.data;
         responseData.forEach(item => { if (this.resourceFormatter) { this.resourceFormatter.call(this.page || {}, item, responseIncluded); }});
+
         this._freshItems = responseData;
         this._cvs.appendBeginning(Math.max(0, index-this.dataSize+1), responseData);
       } catch (error) {
-        debugger;
-        console.error(error);
+        if (error && error.payload_errors && error.payload_errors[0].internal.why === 'urn not subscribed!') {
+          await this._attemptResubscribe();
+        } else {
+          console.error(error);
+        }
       }
     } else if (dir === 'down' || dir === 'none') {
       const requestPayload = {
@@ -283,15 +334,19 @@ class CasperSelectLit extends LitElement {
                              };
 
       try {
-        const response = await this.socket.getLazyload(this.lazyLoadResource, requestPayload, 3000);
+        const response         = await this.socket.getLazyload(this.lazyLoadResource, requestPayload, 3000);
         const responseIncluded = response.included;
-        let responseData = response.data;
+        const responseData     = response.data;
         responseData.forEach(item => { if (this.resourceFormatter) { this.resourceFormatter.call(this.page || {}, item, responseIncluded); }});
+
         this._freshItems = responseData;
         this._cvs.appendEnd(index, responseData);
       } catch (error) {
-        debugger;
-        console.error(error);
+        if (error && error.payload_errors && error.payload_errors[0].internal.why === 'urn not subscribed!') {
+          await this._attemptResubscribe();
+        } else {
+          console.error(error);
+        }
       }
     }
 
@@ -382,29 +437,14 @@ class CasperSelectLit extends LitElement {
     this.loading = true;
     this.requestUpdate();
 
-    if (this._searchValue === "") {
-      this.lazyLoadResource = this._originalResource;
-    } else {
-      this.lazyLoadResource = this._applyFiltersURL();
-    }
     this._initialIdx = 0;
-
-    let subscribeResponse;
-    try {
-      console.time('subscribe');
-
-      const subscribeData =  {idColumn: this.idColumn,
-                              parentColumn: 'NULL',
-                              sortColumn: this.sortColumn};
-
-      subscribeResponse = await this.socket.subscribeLazyload(this.lazyLoadResource, subscribeData, 15000);
-      console.timeEnd('subscribe');
-    } catch (error) {
-      debugger;
-      console.error(error);
-    }
-    this._dataLength = subscribeResponse.user_ids_size;
+    const subscribeResponse = await this._subscribeResource();
     const activeId = subscribeResponse.user_first_id;
+
+    if (subscribeResponse.resource !== this.lazyLoadResource) {
+      // Jump out if lazyLoadResource has already been changed
+      return;
+    }
 
     if (this._dataLength > 0) {
       const response = await this.socket.getLazyload(this.lazyLoadResource, {idColumn: this.idColumn, activeId: +activeId, activeIndex: +this._initialIdx, ratio: 1}, 3000);
@@ -435,9 +475,11 @@ class CasperSelectLit extends LitElement {
       const getIdxResponse = await this.socket.getIndexLazyload(this.lazyLoadResource, +id, 3000);
       return getIdxResponse.found_index;
     } catch (error) {
-      debugger;
-      // TODO: deal with errors
-      console.error(error);
+      if (error && error.payload_errors && error.payload_errors[0].internal.why === 'urn not subscribed!') {
+        await this._attemptResubscribe();
+      } else {
+        console.error(error);
+      }
     }
     return -1;
   }
@@ -458,24 +500,7 @@ class CasperSelectLit extends LitElement {
       this.requestUpdate();
 
       // Subscribe to the resource
-      let subscribeResponse;
-      try {
-        console.time('subscribe');
-
-        const subscribeData =  {idColumn: this.idColumn,
-                                parentColumn: 'NULL',
-                                sortColumn: this.sortColumn,
-                                tableSchema: this.tableSchema,
-                                tableName: this.tableName};
-
-        subscribeResponse = await this.socket.subscribeLazyload(this.lazyLoadResource, subscribeData, 15000);
-        console.timeEnd('subscribe');
-      } catch (error) {
-        debugger;
-        // TODO: deal with subscribe errors
-        console.error(error);
-      }
-      this._dataLength = subscribeResponse.user_ids_size;
+      await this._subscribeResource();
 
       // Find the index of the initial id
       const initialIndex = await this._getIndexForId(+this.initialId);
@@ -487,11 +512,15 @@ class CasperSelectLit extends LitElement {
 
       let getResponse;
       try {
-        getResponse = await this.socket.getLazyload(this.lazyLoadResource, {idColumn: this.idColumn, activeId: +this.initialId, activeIndex: this._initialIdx, ratio: 1}, 3000);
+        const getData = { idColumn: this.idColumn,
+                          activeId: +this.initialId,
+                          activeIndex: this._initialIdx,
+                          ratio: 1 };
+
+        getResponse = await this.socket.getLazyload(this.lazyLoadResource, getData, 3000);
       } catch (error) {
-        debugger;
-        // TODO: deal with errors
         console.error(error);
+        return;
       }
       this.items = getResponse.data;
       const responseIncluded = getResponse.included;
@@ -631,13 +660,13 @@ class CasperSelectLit extends LitElement {
                 this._inputString = response.data?.[this.textProp];
                 this._searchInput.value = response.data?.[this.textProp];
               } catch (error) {
-                debugger;
                 console.error(error);
+                return;
               }
             }, 200);
           } else {
-            debugger;
             console.error(error);
+            return;
           }
         }
       } else {
