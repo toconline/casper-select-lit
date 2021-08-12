@@ -611,6 +611,9 @@ class CasperSelectLit extends LitElement {
     };
   }
 
+  /*
+   * Setup lazyload functions, listeners, etc
+   */
   async _setupLazyLoad () {
     this._originalResource = this.lazyLoadResource;
 
@@ -638,6 +641,10 @@ class CasperSelectLit extends LitElement {
     this._requestQueue = undefined;
   }
 
+  /*
+   * Called when initialId prop changes
+   * Sets searchInput value accordingly
+   */
   async _initialIdChanged () {
     if (this.initialId !== undefined) {
       // Set initial value
