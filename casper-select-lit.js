@@ -2,8 +2,9 @@ import { LitElement, html, css, unsafeCSS } from 'lit';
 import '@polymer/paper-input/paper-input.js';
 import '@cloudware-casper/casper-icons/casper-icon.js';
 import '@cloudware-casper/casper-virtual-scroller/casper-virtual-scroller.js';
+import './components/casper-highlightable.js';
 
-import CasperPopoverBehaviour from './casper-popover-behaviour.js';
+import CasperPopoverBehaviour from './components/casper-popover-behaviour.js';
 
 class CasperSelectLit extends LitElement {
   static styles = css`
@@ -94,6 +95,9 @@ class CasperSelectLit extends LitElement {
       lineCss: {
         type: String
       },
+      extraColumn: {
+        type: String
+      },
       unsafeRender: {
         type: Boolean
       },
@@ -173,21 +177,24 @@ class CasperSelectLit extends LitElement {
 
   constructor () {
     super();
-    this._csInputIcon = 'cs-down-icon-down';
-    this._dataReady = false;
-    this.loading = false;
 
-    this.idColumn = 'id';
+    this.idColumn    = 'id';
     this.tableSchema = 'sharded';
-    this.textProp = 'name';
-    this.dataSize = 100;
-    this.minHeight = 200;
+    this.textProp    = 'name';
+    this.extraColumn = 'NULL'
+    this.dataSize    = 100;
+    this.minHeight   = 200;
+    this._dataReady  = false;
+    this.loading     = false;
 
     this._resubscribeAttempts = 10;
+    this._csInputIcon         = 'cs-down-icon-down';
   }
 
   connectedCallback () {
     super.connectedCallback();
+
+    this._renderLine = this._renderLine.bind(this);
   }
 
   disconnectedCallback () {
@@ -261,12 +268,13 @@ class CasperSelectLit extends LitElement {
 
 
     if (this._searchValue === undefined || this._searchValue.trim() === '') {
-      this.lazyLoadResource = this._originalResource;
+      this.lazyLoadResource     = this._originalResource;
       subscribeData.tableSchema = this.tableSchema;
-      subscribeData.tableName = this.tableName;
+      subscribeData.tableName   = this.tableName;
       console.log(`Subscribing ${this.lazyLoadResource} using table`);
     } else {
-      this.lazyLoadResource = this._applyFiltersURL();
+      this.lazyLoadResource      = this._applyFiltersURL();
+      subscribeData.parentColumn = this.extraColumn;
       console.log(`Subscribing ${this.lazyLoadResource} using jsonapi`);
     }
 
@@ -313,7 +321,7 @@ class CasperSelectLit extends LitElement {
         const response         = await this.socket.getLazyload(this.lazyLoadResource, requestPayload, 3000);
         const responseIncluded = response.included;
         const responseData     = response.data;
-        responseData.forEach(item => { if (this.resourceFormatter) { this.resourceFormatter.call(this.page || {}, item, responseIncluded); }});
+        responseData.forEach(item => { if (this.resourceFormatter) { this.resourceFormatter.call(this.page || {}, item, responseIncluded, this._searchValue); }});
 
         this._freshItems = responseData;
         this._cvs.appendBeginning(Math.max(0, index-this.dataSize+1), responseData);
@@ -337,7 +345,7 @@ class CasperSelectLit extends LitElement {
         const response         = await this.socket.getLazyload(this.lazyLoadResource, requestPayload, 3000);
         const responseIncluded = response.included;
         const responseData     = response.data;
-        responseData.forEach(item => { if (this.resourceFormatter) { this.resourceFormatter.call(this.page || {}, item, responseIncluded); }});
+        responseData.forEach(item => { if (this.resourceFormatter) { this.resourceFormatter.call(this.page || {}, item, responseIncluded, this._searchValue); }});
 
         this._freshItems = responseData;
         this._cvs.appendEnd(index, responseData);
@@ -396,15 +404,15 @@ class CasperSelectLit extends LitElement {
         .filter(filterField => !Object.keys(this.lazyLoadCustomFilters || {}).includes(filterField.constructor === String ? filterField : filterField.field))
         .map(filterField => {
           if (filterField.constructor === String) {
-            return `unaccent(${filterField})::TEXT ILIKE unaccent('%${escapedSearchInputValue}%')`;
+            return `unaccent(${filterField}::TEXT) ILIKE unaccent('%${escapedSearchInputValue}%')`;
           }
 
           if (filterField.constructor === Object && filterField.field && filterField.filterType) {
             switch (filterField.filterType) {
-              case 'exact': return `unaccent(${filterField.field})::TEXT ILIKE unaccent('${escapedSearchInputValue}')`;
-              case 'endsWith': return `unaccent(${filterField.field})::TEXT ILIKE unaccent('%${escapedSearchInputValue}')`;
-              case 'contains': return `unaccent(${filterField.field})::TEXT ILIKE unaccent('%${escapedSearchInputValue}%')`;
-              case 'startsWith': return `unaccent(${filterField.field})::TEXT ILIKE unaccent('${escapedSearchInputValue}%')`;
+              case 'exact': return `unaccent(${filterField.field}::TEXT) ILIKE unaccent('${escapedSearchInputValue}')`;
+              case 'endsWith': return `unaccent(${filterField.field}::TEXT) ILIKE unaccent('%${escapedSearchInputValue}')`;
+              case 'contains': return `unaccent(${filterField.field}::TEXT) ILIKE unaccent('%${escapedSearchInputValue}%')`;
+              case 'startsWith': return `unaccent(${filterField.field}::TEXT) ILIKE unaccent('${escapedSearchInputValue}%')`;
             }
           }
         }).join(' OR ');
@@ -450,7 +458,7 @@ class CasperSelectLit extends LitElement {
       const response = await this.socket.getLazyload(this.lazyLoadResource, {idColumn: this.idColumn, activeId: +activeId, activeIndex: +this._initialIdx, ratio: 1}, 3000);
       this.items = response.data;
       const responseIncluded = response.included;
-      this.items.forEach(item => { if (this.resourceFormatter) { this.resourceFormatter.call(this.page || {}, item, responseIncluded); }});
+      this.items.forEach(item => { if (this.resourceFormatter) { this.resourceFormatter.call(this.page || {}, item, responseIncluded, this._searchValue); }});
       this._freshItems = JSON.parse(JSON.stringify(this.items));
     } else {
       this.items = [];
@@ -524,7 +532,7 @@ class CasperSelectLit extends LitElement {
       }
       this.items = getResponse.data;
       const responseIncluded = getResponse.included;
-      this.items.forEach(item => { if (this.resourceFormatter) { this.resourceFormatter.call(this.page || {}, item, responseIncluded); }});
+      this.items.forEach(item => { if (this.resourceFormatter) { this.resourceFormatter.call(this.page || {}, item, responseIncluded, this._searchValue); }});
       this._freshItems = JSON.parse(JSON.stringify(this.items));
       this.loading = false;
     } else {
@@ -703,16 +711,12 @@ class CasperSelectLit extends LitElement {
     await this._popover.update();
   }
 
-  _specialRegex (value) {
-    return new RegExp(this._normalizeValue(value), 'i');
-  };
-
-  _includesNormalized (value, search) {
-    return (this._normalizeValue(value)).match(this._specialRegex(search));
-  }
-
   _normalizeValue (value) {
     return value.normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+  }
+
+  _includesNormalized (value, search) {
+    return (this._normalizeValue(value)).match(new RegExp(this._normalizeValue(search), 'i'));
   }
 
   /*
@@ -775,56 +779,44 @@ class CasperSelectLit extends LitElement {
       // Forward event to cvs
       this._cvs.dispatchEvent(new KeyboardEvent('keydown', {key: event.key}));
     });
-
-    this.renderLine = this.renderLine.bind(this, this);
   }
 
-  renderLine (cs, item) {
-    const highlightValue = cs._searchValue;
-    const renderHighlight = (highlightValue) => {
-                              const normalizedValue = this._normalizeValue(item[this.textProp]);
-                              const indexOfHighlight = normalizedValue.search(this._specialRegex(highlightValue));
-                              const valueLength = this._normalizeValue(highlightValue).length;
-                              const originalHighlight = item[this.textProp].substr(indexOfHighlight, valueLength);
-                              const replacedName = item[this.textProp].replace(originalHighlight, '__CS2HERE__');
-                              const splitName = replacedName.split('__CS2HERE__');
-                              return html`${splitName[0]}<span class="cvs-item-highlight">${originalHighlight}</span>${splitName[1]}`;
-                            };
-    return html`
-      <style>
-        .cvs-item-highlight {
-          border: 1px solid #CCC;
-          font-weight: bold;
-          border-radius: 4px;
-        }
-        .item-row {
-          font-size: 14px;
-        }
-        .item-row:hover {
-          background-color: var(--primary-color);
-          color: white;
-          cursor: pointer;
-        }
-        .item-row[active] {
-          background-color: var(--dark-primary-color);
-          color: white;
-        }
-        .item-row[active]:hover {
-          background-color: var(--primary-color);
-          color: white;
-          cursor: pointer;
-        }
-      </style>
-      <span>
-        ${(highlightValue && item[this.textProp] && this._includesNormalized(item[this.textProp],highlightValue) && this.highlight)
-          ? renderHighlight(highlightValue)
-          : item[this.textProp]
-        }
-      </span>
-    `;
+  _renderLine (item) {
+    const highlightValue = this.highlight ? this._searchValue : '';
+
+    if (this.renderLine) {
+      return this.renderLine(item, highlightValue);
+    } else {
+      return html`
+        <style>
+          .item-row {
+            font-size: 14px;
+          }
+          .item-row:hover {
+            background-color: var(--primary-color);
+            color: white;
+            cursor: pointer;
+          }
+          .item-row[active] {
+            background-color: var(--dark-primary-color);
+            color: white;
+          }
+          .item-row[active]:hover {
+            background-color: var(--primary-color);
+            color: white;
+            cursor: pointer;
+          }
+        </style>
+        <span>
+          <casper-highlightable highlight="${highlightValue}">
+            ${item[this.textProp]}
+          </casper-highlightable>
+        </span>
+      `;
+    }
   }
 
-  render() {
+  render () {
     return html`
       <div class="main-container" style="width: ${this.width}px">
         ${this.customInput ? '' : html `
@@ -844,7 +836,7 @@ class CasperSelectLit extends LitElement {
           .lineCss="${this.lineCss}"
           .textProp="${this.textProp}"
           .dataSize="${this._dataLength}"
-          .renderLine="${this.renderLine}"
+          .renderLine="${this._renderLine}"
           .startIndex="${this._initialIdx}"
           .unsafeRender="${this.unsafeRender}"
           .renderNoItems="${this.renderNoItems}"
