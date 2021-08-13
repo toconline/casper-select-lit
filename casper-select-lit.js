@@ -467,6 +467,7 @@ class CasperSelectLit extends LitElement {
     this.loading = false;
 
     await this._updateScroller();
+    this._cvs.scrollToIndex(0);
   }
 
   async _filterItems () {
