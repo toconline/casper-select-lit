@@ -186,7 +186,7 @@ class CasperSelectLit extends LitElement {
     this.minHeight   = 200;
     this._dataReady  = false;
     this.loading     = false;
-
+    this.autoOpen    = true;
     this._resubscribeAttempts = 10;
     this._csInputIcon         = 'cs-down-icon-down';
   }
@@ -233,7 +233,7 @@ class CasperSelectLit extends LitElement {
     this._searchValue = undefined;
     this._searchInput.value = this._searchValue;
 
-    this._popover.hide();
+    this.hidePopover();
     this.requestUpdate();
     this.blur();
     event.stopPropagation();
@@ -245,14 +245,22 @@ class CasperSelectLit extends LitElement {
   setValue (id) {
     this.value = id;
     this._cvs.selectedItem = this.value;
-    this._popover.hide();
+    this.hidePopover();
+    this.dispatchEvent(new CustomEvent('change', {
+        detail: { 
+          value: id 
+        },
+        bubbles: true,
+        composed: true
+      })
+    );
   }
 
   /*
    * Toggles the popover
    */
   togglePopover (event) {
-    this._popover.open ? this._popover.hide() : this._popover.show();
+    this._popover.open ? this.hidePopover() : this._popover.show();
     if ( event ) {
       event.stopPropagation();
     }
@@ -624,6 +632,10 @@ class CasperSelectLit extends LitElement {
         }
       }
       await this._updateScroller();
+      this.dispatchEvent(new CustomEvent('foobar-opened', {
+        bubbles: true,
+        composed: true
+      }));
     };
     this._popover.closed = () => {
       // Callback when popover is closed
@@ -641,6 +653,10 @@ class CasperSelectLit extends LitElement {
         this._searchInput.value = '';
       }
       this.requestUpdate();
+      this.dispatchEvent(new CustomEvent('foobar-closed', {
+        bubbles: true,
+        composed: true
+      }));
     };
   }
 
@@ -800,7 +816,9 @@ class CasperSelectLit extends LitElement {
     });
 
     this._searchInput.addEventListener('keydown', async (event) => {
-      await this._popover.show();
+      if ( this.autoOpen === 'false' ) {
+        await this._popover.show();
+      }
       // Forward event to cvs
       this._cvs.dispatchEvent(new KeyboardEvent('keydown', {key: event.key}));
     });
