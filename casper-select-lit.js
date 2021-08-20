@@ -252,12 +252,36 @@ class CasperSelectLit extends LitElement {
    * Toggles the popover
    */
   togglePopover (event) {
-    if (this._popover) {
-      this._popover.open ? this._popover.hide() : this._popover.show();
+    this._popover.open ? this._popover.hide() : this._popover.show();
+    if ( event ) {
       event.stopPropagation();
     }
   }
 
+  /**
+   * Hides the popover
+   * 
+   * @param {Object} event the mouse event
+   */
+  hidePopover (event) {
+    this._popover.hide();
+    if ( event ) {
+      event.stopPropagation();
+    }
+  }
+
+  /**
+   * Hides the popover
+   * 
+   * @param {Object} event the mouse event
+   */
+  showPopover (event) {
+    this._popover.show();
+    if ( event ) {
+      event.stopPropagation();
+    }
+  }
+  
   /*
    * Subscribes a resource using table or jsonapi if we have filters
    */
