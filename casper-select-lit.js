@@ -260,7 +260,7 @@ class CasperSelectLit extends LitElement {
    * Toggles the popover
    */
   togglePopover (event) {
-    this._popover.open ? this.hidePopover() : this._popover.show();
+    this._popover.open ? this.hidePopover() : this.showPopover();
     if ( event ) {
       event.stopPropagation();
     }
@@ -279,7 +279,7 @@ class CasperSelectLit extends LitElement {
   }
 
   /**
-   * Hides the popover
+   * Shows the popover
    * 
    * @param {Object} event the mouse event
    */
@@ -632,7 +632,7 @@ class CasperSelectLit extends LitElement {
         }
       }
       await this._updateScroller();
-      this.dispatchEvent(new CustomEvent('foobar-opened', {
+      this.dispatchEvent(new CustomEvent('popover-opened', {
         bubbles: true,
         composed: true
       }));
@@ -653,7 +653,7 @@ class CasperSelectLit extends LitElement {
         this._searchInput.value = '';
       }
       this.requestUpdate();
-      this.dispatchEvent(new CustomEvent('foobar-closed', {
+      this.dispatchEvent(new CustomEvent('popover-closed', {
         bubbles: true,
         composed: true
       }));
@@ -816,8 +816,8 @@ class CasperSelectLit extends LitElement {
     });
 
     this._searchInput.addEventListener('keydown', async (event) => {
-      if ( this.autoOpen === 'false' ) {
-        await this._popover.show();
+      if ( this.autoOpen ) {
+        await this.showPopover();
       }
       // Forward event to cvs
       this._cvs.dispatchEvent(new KeyboardEvent('keydown', {key: event.key}));
