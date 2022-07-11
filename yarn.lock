@@ -32,9 +32,9 @@
     lit "^2.x"
 
 "@cloudware-casper/casper-virtual-scroller@^0.x":
-  version "0.0.6"
-  resolved "https://npm.pkg.github.com/download/@cloudware-casper/casper-virtual-scroller/0.0.6/9b1f62f630f7914cad38f0f7e991b0f62dd519cef1080da26b5cf79dc3b8a338#509ecc6130b635117ccfcb733daec59fe78d2a9a"
-  integrity sha512-JcB2BCM2K/tpb3s/99TJdSVGddkws6AHp7EFLKlgnyJyXaa0KYPBIri4sRkojVd20QS82Ynw0BKDtBQUtHbMqQ==
+  version "0.0.7"
+  resolved "https://npm.pkg.github.com/download/@cloudware-casper/casper-virtual-scroller/0.0.7/f08996b841ed7ed8a2ea7cd0a66defe338a49ab3ac941cf654d65b400b6212d1#c94d6277b755421c7b13183b1d7d6564bdb1235e"
+  integrity sha512-6GnVN9V2kI2+TWIlkoa+SehOmofu3xspnLYg6Ht8OEEqxhv9/0fxdKadK0sD0RwtRylmLRoBaiqMoC3chiKltg==
   dependencies:
     lit "^2.x"
     wc-spinners "^1.1.1"
@@ -806,7 +806,7 @@ inherits@2.0.4:
   resolved "https://registry.yarnpkg.com/inherits/-/inherits-2.0.4.tgz#0fa2c64f932917c3433a0ded55363aae37416b7c"
   integrity sha512-k/vGaX4/Yla3WzyMCvTQOXYeIHvqOKtnqBduzTHpzpQZzAskKMhZ2K+EnBiSM9zGSoIFeMpXKxa4dYeZIQqewQ==
 
-"ink-ripple@github:alex-saunders/ink-ripple":
+ink-ripple@alex-saunders/ink-ripple:
   version "0.0.0"
   resolved "https://codeload.github.com/alex-saunders/ink-ripple/tar.gz/88e4d753bba9f7b57b372c62a4517bb091c7f713"
 

@@ -227,11 +227,13 @@ class CasperSelectLit extends LitElement {
   /*
    * Clears the input
    */
-  clearValue (event) {
+  async clearValue (event) {
     this.value = undefined;
     this._cvs.selectedItem = undefined;
-    this._searchValue = undefined;
+    this._searchValue = '';
     this._searchInput.value = this._searchValue;
+
+    // this._filterItems();
 
     this.hidePopover();
     this.requestUpdate();
@@ -242,18 +244,22 @@ class CasperSelectLit extends LitElement {
   /*
    * Sets a new value
    */
-  setValue (id) {
+  setValue (id, item) {
     this.value = id;
     this._cvs.selectedItem = this.value;
     this.hidePopover();
+
+    // If we dont have an item try to look for it
+    !item ? item = this.items?.filter(it => it?.[this.idColumn] == id)?.[0] : true;
+
     this.dispatchEvent(new CustomEvent('change', {
-        detail: { 
-          value: id 
-        },
-        bubbles: true,
-        composed: true
-      })
-    );
+      detail: { 
+        value: id,
+        item: item
+      },
+      bubbles: true,
+      composed: true
+    }));
   }
 
   /*
@@ -799,7 +805,9 @@ class CasperSelectLit extends LitElement {
 
       this._debouncedFilter = this._debounce(async () => {
         // Normal filtering
-        this.items = this._initialItems.filter(item => this._includesNormalized(item[this.textProp],this._searchValue));
+        this.items = this._searchValue 
+          ? this._initialItems.filter(item => this._includesNormalized(item[this.textProp],this._searchValue)) 
+          : JSON.parse(JSON.stringify(this._initialItems));
         this._dataLength = this.items.length;
         await this._updateScroller();
       }, 250);
@@ -811,7 +819,7 @@ class CasperSelectLit extends LitElement {
     this._cvs.addEventListener('cvs-line-selected', (event) => {
       if (event && event.detail) {
         this._inputString = event.detail.name;
-        this.setValue(event.detail.id);
+        this.setValue(event.detail.id, event.detail.item);
       }
     });
 
