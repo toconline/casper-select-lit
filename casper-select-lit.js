@@ -299,12 +299,12 @@ class CasperSelectLit extends LitElement {
 
       this._debouncedFilter = this._debounce(async () => {
         // Normal filtering
-        this.items = this._searchValue 
-          ? this._initialItems.filter(item => this._includesNormalized(item[this.textProp],this._searchValue)) 
+        this.items = this._searchValue
+          ? this._initialItems.filter(item => this._includesNormalized(item[this.textProp],this._searchValue))
           : JSON.parse(JSON.stringify(this._initialItems));
 
         if (this.acceptUnlistedValue) this._setUnlistedValue();
-        
+
         this._dataLength = this.items.length;
         await this._updateScroller();
         this._resolveItemsFilteredPromise();
@@ -322,7 +322,7 @@ class CasperSelectLit extends LitElement {
     });
 
     this._searchInput.addEventListener('keydown', async (event) => {
-      
+
       // Avoid messing with the input cursor
       switch (event.key) {
         case 'ArrowUp':
@@ -364,7 +364,7 @@ class CasperSelectLit extends LitElement {
   //***************************************************************************************//
   //                               ~~~ Public functions~~~                                 //
   //***************************************************************************************//
-  
+
   /*
    * Clears the input
    */
@@ -376,7 +376,7 @@ class CasperSelectLit extends LitElement {
     this._cvs.selectedItem = undefined;
     this._searchValue = '';
     this._searchInput.value = this._searchValue;
-    
+
     this._filterItems();
     await this.itemsFiltered;
 
@@ -387,7 +387,7 @@ class CasperSelectLit extends LitElement {
       bubbles: true,
       composed: true
     }));
-    
+
     this.hidePopover();
     this.requestUpdate();
     this.blur();
@@ -405,7 +405,7 @@ class CasperSelectLit extends LitElement {
     !item ? item = this.items?.filter(it => it?.id == id)?.[0] : true;
 
     this.dispatchEvent(new CustomEvent('change', {
-      detail: { 
+      detail: {
         value: id,
         item: item
       },
@@ -426,7 +426,7 @@ class CasperSelectLit extends LitElement {
 
   /**
    * Hides the popover
-   * 
+   *
    * @param {Object} event the mouse event
    */
    hidePopover (event) {
@@ -437,7 +437,7 @@ class CasperSelectLit extends LitElement {
 
   /**
    * Shows the popover
-   * 
+   *
    * @param {Object} event the mouse event
    */
   async showPopover (event) {
@@ -445,7 +445,7 @@ class CasperSelectLit extends LitElement {
     if (event) event.stopPropagation();
     await this._popover.show();
   }
-  
+
   //***************************************************************************************//
   //                              ~~~ Private functions~~~                                 //
   //***************************************************************************************//
@@ -477,8 +477,8 @@ class CasperSelectLit extends LitElement {
           }
         </style>
         <span>
-          ${ item.unlisted 
-          ? html `${item[this.textProp]} - Não listado` 
+          ${ item.unlisted
+          ? html `${item[this.textProp]} - Não listado`
           : html `<casper-highlightable highlight="${highlightValue}">
                     ${item[this.textProp]}
                   </casper-highlightable>`}
@@ -720,7 +720,7 @@ class CasperSelectLit extends LitElement {
     }
 
     if (this.acceptUnlistedValue) this._setUnlistedValue();
-    
+
     this.loading = false;
 
     await this._updateScroller();
@@ -792,7 +792,7 @@ class CasperSelectLit extends LitElement {
       }
       this.items = getResponse.data;
       const responseIncluded = getResponse.included;
-      this.items.forEach(item => { if (this.resourceFormatter) { this.resourceFormatter.call(this.page || {}, item, responseIncluded, this._searchValue); }});
+      this.items.forEach(item => { if (this.resourceFormatter) { this.resourceFormatter.call(this.page || {}, item, responseIncluded, this._searchValue); } });
       this._freshItems = JSON.parse(JSON.stringify(this.items));
       this.loading = false;
     } else {
@@ -941,11 +941,11 @@ class CasperSelectLit extends LitElement {
           this._inputString = response.data?.[this.textProp];
           this._searchInput.value = response.data?.[this.textProp];
 
-          let initialItem = response.data;
           if (this.resourceFormatter) {
-            initialItem = this.resourceFormatter.call(this.page || {}, response.data,  response.included, this._searchValue);
+            this.resourceFormatter.call(this.page || {}, response.data,  response.included, this._searchValue);
           }
-          this.setValue(this.initialId, initialItem);
+
+          this.setValue(this.initialId, response.data);
         } catch (error) {
           // TODO solve issue with socket 2 connecting state
           if (error.code == 11) {
@@ -956,11 +956,11 @@ class CasperSelectLit extends LitElement {
                 this._inputString = response.data?.[this.textProp];
                 this._searchInput.value = response.data?.[this.textProp];
 
-                let initialItem = response.data;
                 if (this.resourceFormatter) {
-                  initialItem = this.resourceFormatter.call(this.page || {}, response.data,  response.included, this._searchValue);
+                  this.resourceFormatter.call(this.page || {}, response.data,  response.included, this._searchValue);
                 }
-                this.setValue(this.initialId, initialItem);
+
+                this.setValue(this.initialId, response.data);
               } catch (error) {
                 console.error(error);
                 return;
