@@ -69,7 +69,7 @@ class CasperSelectLit extends LitElement {
         type: Number
       },
       initialId: {
-        type: Number
+        type: String
       },
       dataSize: {
         type: Number
@@ -140,6 +140,13 @@ class CasperSelectLit extends LitElement {
       renderLine: {
         type: Function
       },
+      acceptUnlistedValue: {
+        type: Boolean
+      },
+      _unlistedItem: {
+        type: Object,
+        attribute: false
+      },
       _lazyload: {
         type: Boolean,
         attribute: false
@@ -188,16 +195,16 @@ class CasperSelectLit extends LitElement {
   constructor () {
     super();
 
-    this.idColumn    = 'id';
-    this.tableSchema = 'sharded';
-    this.textProp    = 'name';
-    this.extraColumn = 'NULL'
-    this.dataSize    = 100;
-    this.minHeight   = 200;
-    this._dataReady  = false;
-    this.loading     = false;
-    this.autoOpen    = true;
-    this._itemsFiltered = true;
+    this.idColumn             = 'id';
+    this.tableSchema          = 'sharded';
+    this.textProp             = 'name';
+    this.extraColumn          = 'NULL'
+    this.dataSize             = 100;
+    this.minHeight            = 200;
+    this._dataReady           = false;
+    this.loading              = false;
+    this.autoOpen             = true;
+    this._itemsFiltered       = true;
     this._resubscribeAttempts = 10;
     this._csInputIcon         = 'cs-down-icon-down';
   }
@@ -206,6 +213,7 @@ class CasperSelectLit extends LitElement {
     super.connectedCallback();
 
     this._renderLine = this._renderLine.bind(this);
+    this._renderNoItems = this._renderNoItems.bind(this);
   }
 
   disconnectedCallback () {
@@ -244,8 +252,9 @@ class CasperSelectLit extends LitElement {
           .dataSize="${this._dataLength}"
           .renderLine="${this._renderLine}"
           .startIndex="${this._initialIdx}"
+          .unlistedItem="${this._unlistedItem}"
           .unsafeRender="${this.unsafeRender}"
-          .renderNoItems="${this.renderNoItems}"
+          .renderNoItems="${this._renderNoItems}"
           .renderPlaceholder="${this.renderPlaceholder}">
         </casper-virtual-scroller>
       </div>
@@ -266,8 +275,6 @@ class CasperSelectLit extends LitElement {
     if (this._lazyload) {
       this._setupLazyLoad();
     } else {
-      this._initialIdChanged();
-
       if (!this.items) {
         // If we don't have items and we are not lazyloading use classic HTML options
         const options = this.querySelectorAll('option');
@@ -288,11 +295,16 @@ class CasperSelectLit extends LitElement {
         }
       }
 
+      // this._initialIdChanged(); // TODO: do we need this?
+
       this._debouncedFilter = this._debounce(async () => {
         // Normal filtering
         this.items = this._searchValue 
           ? this._initialItems.filter(item => this._includesNormalized(item[this.textProp],this._searchValue)) 
           : JSON.parse(JSON.stringify(this._initialItems));
+
+        if (this.acceptUnlistedValue) this._setUnlistedValue();
+        
         this._dataLength = this.items.length;
         await this._updateScroller();
         this._resolveItemsFilteredPromise();
@@ -310,6 +322,17 @@ class CasperSelectLit extends LitElement {
     });
 
     this._searchInput.addEventListener('keydown', async (event) => {
+      
+      // Avoid messing with the input cursor
+      switch (event.key) {
+        case 'ArrowUp':
+          event.preventDefault();
+          break;
+        case 'ArrowDown':
+          event.preventDefault();
+          break;
+      }
+
       if ( this.autoOpen ) {
         await this.showPopover();
       }
@@ -356,6 +379,14 @@ class CasperSelectLit extends LitElement {
     
     this._filterItems();
     await this.itemsFiltered;
+
+    this.dispatchEvent(new CustomEvent('clear-value', {
+      detail: {
+        value: this.value,
+      },
+      bubbles: true,
+      composed: true
+    }));
     
     this.hidePopover();
     this.requestUpdate();
@@ -371,7 +402,7 @@ class CasperSelectLit extends LitElement {
     this.hidePopover();
 
     // If we dont have an item try to look for it
-    !item ? item = this.items?.filter(it => it?.[this.idColumn] == id)?.[0] : true;
+    !item ? item = this.items?.filter(it => it?.id == id)?.[0] : true;
 
     this.dispatchEvent(new CustomEvent('change', {
       detail: { 
@@ -446,10 +477,29 @@ class CasperSelectLit extends LitElement {
           }
         </style>
         <span>
-          <casper-highlightable highlight="${highlightValue}">
-            ${item[this.textProp]}
-          </casper-highlightable>
+          ${ item.unlisted 
+          ? html `${item[this.textProp]} - Não listado` 
+          : html `<casper-highlightable highlight="${highlightValue}">
+                    ${item[this.textProp]}
+                  </casper-highlightable>`}
         </span>
+      `;
+    }
+  }
+
+  _renderNoItems () {
+    if (this.renderNoItems) {
+      return this.renderNoItems();
+    } else {
+      return html `
+        <style>
+          .no-item-div {
+            text-align: center;
+            padding: 15px;
+            font-size: 13px;
+          }
+        </style>
+        <div class="no-item-div">Sem resultados</div>
       `;
     }
   }
@@ -467,11 +517,11 @@ class CasperSelectLit extends LitElement {
       this.lazyLoadResource     = this._originalResource;
       subscribeData.tableSchema = this.tableSchema;
       subscribeData.tableName   = this.tableName;
-      console.log(`Subscribing ${this.lazyLoadResource} using table`);
+      // console.log(`Subscribing ${this.lazyLoadResource} using table`);
     } else {
       this.lazyLoadResource      = this._applyFiltersURL();
       subscribeData.parentColumn = this.extraColumn;
-      console.log(`Subscribing ${this.lazyLoadResource} using jsonapi`);
+      // console.log(`Subscribing ${this.lazyLoadResource} using jsonapi`);
     }
 
     try {
@@ -493,7 +543,7 @@ class CasperSelectLit extends LitElement {
 
     this._resubscribeAttempts--;
 
-    console.log(`Session died, resubscribing... ${this._resubscribeAttempts} attempts left`);
+    // console.log(`Session died, resubscribing... ${this._resubscribeAttempts} attempts left`);
 
     if (this._resubscribeAttempts > 0) {
       await this._subscribeResource();
@@ -504,7 +554,7 @@ class CasperSelectLit extends LitElement {
    * Gets called when users scrolls to fetch more items from the server
    */
   async _fetchItems (dir, index) {
-    console.log(`%c Requested -> ${index}`, 'background: red; color: white');
+    // console.log(`%c Requested -> ${index}`, 'background: red; color: white');
     if (dir === 'up') {
       const requestPayload = {
                               idColumn: this.idColumn,
@@ -669,6 +719,8 @@ class CasperSelectLit extends LitElement {
       this.items = [];
     }
 
+    if (this.acceptUnlistedValue) this._setUnlistedValue();
+    
     this.loading = false;
 
     await this._updateScroller();
@@ -824,6 +876,9 @@ class CasperSelectLit extends LitElement {
         } else {
           this._searchInput.value = this._initialItems.filter(e=>e.id == this.value)[0]?.[this.textProp];
         }
+        if (this.acceptUnlistedValue && this._searchInput.value === undefined) {
+          this._searchInput.value = this.value
+        }
       } else {
         this._searchInput.value = '';
       }
@@ -849,7 +904,7 @@ class CasperSelectLit extends LitElement {
       const dir = event.detail.direction;
       const index = event.detail.index;
 
-      console.log(`%c Received request ${dir} -> ${index}`, 'background: white; color: blue');
+      // console.log(`%c Received request ${dir} -> ${index}`, 'background: white; color: blue');
       if (!this._requested) {
         this._requested = true;
         await this._fetchItems(dir, index);
@@ -859,7 +914,7 @@ class CasperSelectLit extends LitElement {
       }
     });
 
-    await this._initialIdChanged();
+    // await this._initialIdChanged(); TODO: Do we need this?
 
     this._requested = false;
     this._requestQueue = undefined;
@@ -871,25 +926,41 @@ class CasperSelectLit extends LitElement {
    */
   async _initialIdChanged () {
     if (this.initialId !== undefined) {
-      // Set initial value
-      this.setValue(this.initialId);
-
       if (this._lazyload) {
+        let completeUrl = '';
         try {
           await this.updateComplete;
 
-          // TODO: inject id more gracefuly
-          const response = await this.socket.jget(`${this.lazyLoadResource}/${this.value}`, 3000);
+          const resourceName = this.lazyLoadResource.split('?')[0];
+          const resourceParameters = this.lazyLoadResource.split('?')[1];
+
+          completeUrl = `${resourceName}/${this.initialId}${resourceParameters ? `?${resourceParameters}` : ''}`;
+
+          const response = await this.socket.jget(completeUrl, 3000);
+
           this._inputString = response.data?.[this.textProp];
           this._searchInput.value = response.data?.[this.textProp];
+
+          let initialItem = response.data;
+          if (this.resourceFormatter) {
+            initialItem = this.resourceFormatter.call(this.page || {}, response.data,  response.included, this._searchValue);
+          }
+          this.setValue(this.initialId, initialItem);
         } catch (error) {
           // TODO solve issue with socket 2 connecting state
           if (error.code == 11) {
             setTimeout(async () => {
               try {
-                const response = await this.socket.jget(`${this.lazyLoadResource}/${this.value}`, 3000);
+                const response = await this.socket.jget(completeUrl, 3000);
+
                 this._inputString = response.data?.[this.textProp];
                 this._searchInput.value = response.data?.[this.textProp];
+
+                let initialItem = response.data;
+                if (this.resourceFormatter) {
+                  initialItem = this.resourceFormatter.call(this.page || {}, response.data,  response.included, this._searchValue);
+                }
+                this.setValue(this.initialId, initialItem);
               } catch (error) {
                 console.error(error);
                 return;
@@ -901,6 +972,8 @@ class CasperSelectLit extends LitElement {
           }
         }
       } else {
+        this.setValue(this.initialId);
+
         for (let idx = 0; idx < this.items.length; idx++) {
           if (this.items[idx].id === this.initialId) {
             this._initialIdx = idx;
@@ -918,8 +991,21 @@ class CasperSelectLit extends LitElement {
     this._popover.resetMinWidth = true;
   }
 
+  _setUnlistedValue () {
+    const searchMatchesId = this.items.filter(e => e.id === this._searchValue).length;
+
+    if (this._searchValue !== undefined && this._searchValue !== '' && !searchMatchesId) {
+      const unlistedItem = {unlisted: true};
+      unlistedItem.id = this._searchValue;
+      unlistedItem[this.textProp] = this._searchValue;
+      this._unlistedItem = unlistedItem;
+    } else {
+      this._unlistedItem = undefined;
+    }
+  }
+
   async _updateScroller () {
-    console.log('-- Updating Scroller --');
+    // console.log('-- Updating Scroller --');
     this.requestUpdate();
     await this.updateComplete;
     this._cvs.requestUpdate();
