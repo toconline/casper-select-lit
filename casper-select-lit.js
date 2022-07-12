@@ -218,6 +218,109 @@ class CasperSelectLit extends LitElement {
     }
   }
 
+  //***************************************************************************************//
+  //                                ~~~ LIT life cycle ~~~                                 //
+  //***************************************************************************************//
+
+  render () {
+    return html`
+      <div class="main-container" style="width: ${this.width}px">
+        ${this.customInput ? '' : html `
+          <paper-input label="${this.label}" id="cs-input">
+            <div slot="suffix" class="cs-suffix-icons">
+              ${this.value !== undefined && !this.disableClear ? html`<casper-icon @click="${this.clearValue}" class="cs-times-icon" icon="fa-light:times"></casper-icon>` : ''}
+              <casper-icon @click="${this.togglePopover}" class="cs-down-icon ${this._csInputIcon}" icon="fa-regular:angle-down"></casper-icon>
+            </div>
+          </paper-input>
+        `}
+        <casper-virtual-scroller
+          id="cvs"
+          delaySetup
+          .items="${this.items}"
+          .height="${this.height}"
+          ?loading="${this.loading}"
+          .lineCss="${this.lineCss}"
+          .textProp="${this.textProp}"
+          .dataSize="${this._dataLength}"
+          .renderLine="${this._renderLine}"
+          .startIndex="${this._initialIdx}"
+          .unsafeRender="${this.unsafeRender}"
+          .renderNoItems="${this.renderNoItems}"
+          .renderPlaceholder="${this.renderPlaceholder}">
+        </casper-virtual-scroller>
+      </div>
+    `;
+  }
+
+  /*
+   * Lit function thats called when component finishes the first render
+   */
+  firstUpdated () {
+    this._searchInput = this.customInput || this.shadowRoot.getElementById('cs-input');
+    this._cvs = this.shadowRoot.getElementById('cvs');
+
+    this._setupPopover();
+
+    this.lazyLoadResource ? this._lazyload = true : this._lazyload = false;
+
+    if (this._lazyload) {
+      this._setupLazyLoad();
+    } else {
+      this._initialIdChanged();
+
+      if (!this.items) {
+        // If we don't have items and we are not lazyloading use classic HTML options
+        const options = this.querySelectorAll('option');
+        let tmpItems = [];
+        if (options.length > 0) {
+          options.forEach(item => {
+            if (item.value && item.innerText) {
+              tmpItems.push({id: item.value, name: item.innerText});
+            }
+          });
+        }
+        this.items = tmpItems;
+      } else if (this.items.length > 0 && typeof this.items[0] !== 'object') {
+        // If we are not using an array of objects use simple array with item index as id
+        for (let idx = 0; idx < this.items.length; idx++) {
+          const item = this.items[idx];
+          this.items[idx] = {id: idx+1, name: item};
+        }
+      }
+
+      this._debouncedFilter = this._debounce(async () => {
+        // Normal filtering
+        this.items = this._searchValue 
+          ? this._initialItems.filter(item => this._includesNormalized(item[this.textProp],this._searchValue)) 
+          : JSON.parse(JSON.stringify(this._initialItems));
+        this._dataLength = this.items.length;
+        await this._updateScroller();
+        this._resolveItemsFilteredPromise();
+      }, 250);
+
+      this._dataLength = this.items.length;
+    }
+
+    this._searchInput.addEventListener('input', this._userInput.bind(this));
+    this._cvs.addEventListener('cvs-line-selected', (event) => {
+      if (event && event.detail) {
+        this._inputString = event.detail.name;
+        this.setValue(event.detail.id, event.detail.item);
+      }
+    });
+
+    this._searchInput.addEventListener('keydown', async (event) => {
+      if ( this.autoOpen ) {
+        await this.showPopover();
+      }
+      // Forward event to cvs
+      this._cvs.dispatchEvent(new KeyboardEvent('keydown', {key: event.key}));
+    });
+  }
+
+  /*
+   * Lit function thats called everytime an attribute changes value
+   */
   updated (changedProperties) {
     if (changedProperties.has('fitInto')) {
       // Fit into has changed, update popover
@@ -235,6 +338,10 @@ class CasperSelectLit extends LitElement {
     }
   }
 
+  //***************************************************************************************//
+  //                               ~~~ Public functions~~~                                 //
+  //***************************************************************************************//
+  
   /*
    * Clears the input
    */
@@ -308,6 +415,45 @@ class CasperSelectLit extends LitElement {
     await this._popover.show();
   }
   
+  //***************************************************************************************//
+  //                              ~~~ Private functions~~~                                 //
+  //***************************************************************************************//
+
+  _renderLine (item) {
+    const highlightValue = this.highlight ? this._searchValue : '';
+
+    if (this.renderLine) {
+      return this.renderLine(item, highlightValue);
+    } else {
+      return html`
+        <style>
+          .item-row {
+            font-size: 14px;
+          }
+          .item-row:hover {
+            background-color: var(--primary-color);
+            color: white;
+            cursor: pointer;
+          }
+          .item-row[active] {
+            background-color: var(--dark-primary-color);
+            color: white;
+          }
+          .item-row[active]:hover {
+            background-color: var(--primary-color);
+            color: white;
+            cursor: pointer;
+          }
+        </style>
+        <span>
+          <casper-highlightable highlight="${highlightValue}">
+            ${item[this.textProp]}
+          </casper-highlightable>
+        </span>
+      `;
+    }
+  }
+
   /*
    * Subscribes a resource using table or jsonapi if we have filters
    */
@@ -787,138 +933,6 @@ class CasperSelectLit extends LitElement {
 
   _includesNormalized (value, search) {
     return (this._normalizeValue(value)).match(new RegExp(this._normalizeValue(search), 'i'));
-  }
-
-  /*
-   * Lit function thats called when component finishes the first render
-   */
-  firstUpdated () {
-
-    this._searchInput = this.customInput || this.shadowRoot.getElementById('cs-input');
-    this._cvs = this.shadowRoot.getElementById('cvs');
-
-    this._setupPopover();
-
-    this.lazyLoadResource ? this._lazyload = true : this._lazyload = false;
-
-    if (this._lazyload) {
-      this._setupLazyLoad();
-    } else {
-      this._initialIdChanged();
-
-      if (!this.items) {
-        // If we don't have items and we are not lazyloading use classic HTML options
-        const options = this.querySelectorAll('option');
-        let tmpItems = [];
-        if (options.length > 0) {
-          options.forEach(item => {
-            if (item.value && item.innerText) {
-              tmpItems.push({id: item.value, name: item.innerText});
-            }
-          });
-        }
-        this.items = tmpItems;
-      } else if (this.items.length > 0 && typeof this.items[0] !== 'object') {
-        // If we are not using an array of objects use simple array with item index as id
-        for (let idx = 0; idx < this.items.length; idx++) {
-          const item = this.items[idx];
-          this.items[idx] = {id: idx+1, name: item};
-        }
-      }
-
-      this._debouncedFilter = this._debounce(async () => {
-        // Normal filtering
-        this.items = this._searchValue 
-          ? this._initialItems.filter(item => this._includesNormalized(item[this.textProp],this._searchValue)) 
-          : JSON.parse(JSON.stringify(this._initialItems));
-        this._dataLength = this.items.length;
-        await this._updateScroller();
-        this._resolveItemsFilteredPromise();
-      }, 250);
-
-      this._dataLength = this.items.length;
-    }
-
-    this._searchInput.addEventListener('input', this._userInput.bind(this));
-    this._cvs.addEventListener('cvs-line-selected', (event) => {
-      if (event && event.detail) {
-        this._inputString = event.detail.name;
-        this.setValue(event.detail.id, event.detail.item);
-      }
-    });
-
-    this._searchInput.addEventListener('keydown', async (event) => {
-      if ( this.autoOpen ) {
-        await this.showPopover();
-      }
-      // Forward event to cvs
-      this._cvs.dispatchEvent(new KeyboardEvent('keydown', {key: event.key}));
-    });
-  }
-
-  _renderLine (item) {
-    const highlightValue = this.highlight ? this._searchValue : '';
-
-    if (this.renderLine) {
-      return this.renderLine(item, highlightValue);
-    } else {
-      return html`
-        <style>
-          .item-row {
-            font-size: 14px;
-          }
-          .item-row:hover {
-            background-color: var(--primary-color);
-            color: white;
-            cursor: pointer;
-          }
-          .item-row[active] {
-            background-color: var(--dark-primary-color);
-            color: white;
-          }
-          .item-row[active]:hover {
-            background-color: var(--primary-color);
-            color: white;
-            cursor: pointer;
-          }
-        </style>
-        <span>
-          <casper-highlightable highlight="${highlightValue}">
-            ${item[this.textProp]}
-          </casper-highlightable>
-        </span>
-      `;
-    }
-  }
-
-  render () {
-    return html`
-      <div class="main-container" style="width: ${this.width}px">
-        ${this.customInput ? '' : html `
-          <paper-input label="${this.label}" id="cs-input">
-            <div slot="suffix" class="cs-suffix-icons">
-              ${this.value !== undefined && !this.disableClear ? html`<casper-icon @click="${this.clearValue}" class="cs-times-icon" icon="fa-light:times"></casper-icon>` : ''}
-              <casper-icon @click="${this.togglePopover}" class="cs-down-icon ${this._csInputIcon}" icon="fa-regular:angle-down"></casper-icon>
-            </div>
-          </paper-input>
-        `}
-        <casper-virtual-scroller
-          id="cvs"
-          delaySetup
-          .items="${this.items}"
-          .height="${this.height}"
-          ?loading="${this.loading}"
-          .lineCss="${this.lineCss}"
-          .textProp="${this.textProp}"
-          .dataSize="${this._dataLength}"
-          .renderLine="${this._renderLine}"
-          .startIndex="${this._initialIdx}"
-          .unsafeRender="${this.unsafeRender}"
-          .renderNoItems="${this.renderNoItems}"
-          .renderPlaceholder="${this.renderPlaceholder}">
-        </casper-virtual-scroller>
-      </div>
-    `;
   }
 }
 
