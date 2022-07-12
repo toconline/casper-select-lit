@@ -175,6 +175,16 @@ class CasperSelectLit extends LitElement {
     }
   }
 
+  get itemsFiltered () {
+    if (!this._itemsFilteredPromise)
+      this._itemsFilteredPromise = [];
+    if (this._itemsFiltered) {
+      return new Promise((resolve, reject) => resolve());
+    } else {
+      return new Promise((resolve, reject) => this._itemsFilteredPromise.push({ resolve: resolve, reject: reject }));
+    }
+  }
+
   constructor () {
     super();
 
@@ -187,6 +197,7 @@ class CasperSelectLit extends LitElement {
     this._dataReady  = false;
     this.loading     = false;
     this.autoOpen    = true;
+    this._itemsFiltered = true;
     this._resubscribeAttempts = 10;
     this._csInputIcon         = 'cs-down-icon-down';
   }
@@ -228,17 +239,20 @@ class CasperSelectLit extends LitElement {
    * Clears the input
    */
   async clearValue (event) {
+    event.stopPropagation();
+
+    await this.showPopover();
     this.value = undefined;
     this._cvs.selectedItem = undefined;
     this._searchValue = '';
     this._searchInput.value = this._searchValue;
-
-    // this._filterItems();
-
+    
+    this._filterItems();
+    await this.itemsFiltered;
+    
     this.hidePopover();
     this.requestUpdate();
     this.blur();
-    event.stopPropagation();
   }
 
   /*
@@ -265,11 +279,11 @@ class CasperSelectLit extends LitElement {
   /*
    * Toggles the popover
    */
-  togglePopover (event) {
-    this._popover.open ? this.hidePopover() : this.showPopover();
+  async togglePopover (event) {
     if ( event ) {
       event.stopPropagation();
     }
+    this._popover.open ? this.hidePopover() : await this.showPopover();
   }
 
   /**
@@ -277,11 +291,10 @@ class CasperSelectLit extends LitElement {
    * 
    * @param {Object} event the mouse event
    */
-  hidePopover (event) {
+   hidePopover (event) {
+    if (!this._popover.open) return;
+    if (event) event.stopPropagation();
     this._popover.hide();
-    if ( event ) {
-      event.stopPropagation();
-    }
   }
 
   /**
@@ -289,11 +302,10 @@ class CasperSelectLit extends LitElement {
    * 
    * @param {Object} event the mouse event
    */
-  showPopover (event) {
-    this._popover.show();
-    if ( event ) {
-      event.stopPropagation();
-    }
+  async showPopover (event) {
+    if (this._popover.open) return;
+    if (event) event.stopPropagation();
+    await this._popover.show();
   }
   
   /*
@@ -423,6 +435,14 @@ class CasperSelectLit extends LitElement {
     };
   };
 
+  _resolveItemsFilteredPromise () {
+    this._itemsFiltered = true;
+    if (this._itemsFilteredPromise && this._itemsFilteredPromise.length > 0) {
+      this._itemsFilteredPromise.forEach(promise => promise.resolve());
+      this._itemsFilteredPromise = [];
+    }
+  }
+
 
   /*
    * More or less the same code that was in the old casper-select
@@ -489,6 +509,7 @@ class CasperSelectLit extends LitElement {
 
     if (subscribeResponse.resource !== this.lazyLoadResource) {
       // Jump out if lazyLoadResource has already been changed
+      this._resolveItemsFilteredPromise();
       return;
     }
 
@@ -506,10 +527,12 @@ class CasperSelectLit extends LitElement {
 
     await this._updateScroller();
     this._cvs.scrollToIndex(0);
+    this._resolveItemsFilteredPromise();
   }
 
-  async _filterItems () {
+  _filterItems () {
     if ((!this._lazyload || this.lazyLoadFilterFields) && this._dataReady) {
+      this._itemsFiltered = false;
       this._debouncedFilter();
     }
   }
@@ -810,6 +833,7 @@ class CasperSelectLit extends LitElement {
           : JSON.parse(JSON.stringify(this._initialItems));
         this._dataLength = this.items.length;
         await this._updateScroller();
+        this._resolveItemsFilteredPromise();
       }, 250);
 
       this._dataLength = this.items.length;
