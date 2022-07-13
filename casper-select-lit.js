@@ -110,6 +110,9 @@ class CasperSelectLit extends LitElement {
       loading: {
         type: Boolean
       },
+      noLabelFloat: {
+        type: Boolean
+      },
       lazyLoadFilterFields: {
         type: Array
       },
@@ -204,6 +207,7 @@ class CasperSelectLit extends LitElement {
     this._dataReady           = false;
     this.loading              = false;
     this.autoOpen             = true;
+    this.noLabelFloat         = false;
     this._itemsFiltered       = true;
     this._resubscribeAttempts = 10;
     this._csInputIcon         = 'cs-down-icon-down';
@@ -234,7 +238,7 @@ class CasperSelectLit extends LitElement {
     return html`
       <div class="main-container" style="width: ${this.width}px">
         ${this.customInput ? '' : html `
-          <paper-input label="${this.label}" id="cs-input">
+          <paper-input label="${this.label}" ?no-label-float="${this.noLabelFloat}" id="cs-input">
             <div slot="suffix" class="cs-suffix-icons">
               ${this.value !== undefined && !this.disableClear ? html`<casper-icon @click="${this.clearValue}" class="cs-times-icon" icon="fa-light:times"></casper-icon>` : ''}
               <casper-icon @click="${this.togglePopover}" class="cs-down-icon ${this._csInputIcon}" icon="fa-regular:angle-down"></casper-icon>

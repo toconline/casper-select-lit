@@ -14,7 +14,7 @@
     "@cloudware-casper/casper-icons": "^3.x",
     "@cloudware-casper/casper-virtual-scroller": "^0.x",
     "@polymer/paper-input": "^3.x",
-    "@popperjs/core": "^2.9.2",
+    "@popperjs/core": "^2.x",
     "lit": "^2.x",
     "popper-max-size-modifier": "^0.2.0"
   },
