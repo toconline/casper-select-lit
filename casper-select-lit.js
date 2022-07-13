@@ -359,6 +359,10 @@ class CasperSelectLit extends LitElement {
     if (changedProperties.has('items')) {
       this._itemsChanged();
     }
+
+    if (changedProperties.has('_searchValue')) {
+      this._filterItems();
+    }
   }
 
   //***************************************************************************************//
@@ -370,16 +374,10 @@ class CasperSelectLit extends LitElement {
    */
   async clearValue (event) {
     event.stopPropagation();
-
-    await this.showPopover();
     this.value = undefined;
     this._cvs.selectedItem = undefined;
-    this._searchValue = '';
-    this._searchInput.value = this._searchValue;
-
-    this._filterItems();
-    await this.itemsFiltered;
-
+    this._searchInput.value = this.value;
+    
     this.dispatchEvent(new CustomEvent('clear-value', {
       detail: {
         value: this.value,
@@ -387,6 +385,7 @@ class CasperSelectLit extends LitElement {
       bubbles: true,
       composed: true
     }));
+
 
     this.hidePopover();
     this.requestUpdate();
@@ -740,6 +739,7 @@ class CasperSelectLit extends LitElement {
    */
   async _getIndexForId (id) {
     try {
+      if (!id) return 0;
       const getIdxResponse = await this.socket.getIndexLazyload(this.lazyLoadResource, +id, 3000);
       return getIdxResponse.found_index;
     } catch (error) {
@@ -758,7 +758,6 @@ class CasperSelectLit extends LitElement {
   _userInput (e) {
     if (e && e.inputType) {
       this._searchValue = this._searchInput.value;
-      this._filterItems();
     }
   }
 
@@ -771,7 +770,7 @@ class CasperSelectLit extends LitElement {
       await this._subscribeResource();
 
       // Find the index of the initial id
-      const initialIndex = await this._getIndexForId(+this.initialId);
+      const initialIndex = await this._getIndexForId((+this.initialId || 0));
       if (initialIndex > -1) {
         this._initialIdx = initialIndex;
       } else {
@@ -781,7 +780,7 @@ class CasperSelectLit extends LitElement {
       let getResponse;
       try {
         const getData = { idColumn: this.idColumn,
-                          activeId: +this.initialId,
+                          activeId: (+this.initialId || 0),
                           activeIndex: this._initialIdx,
                           ratio: 1 };
 
