@@ -404,6 +404,12 @@ class CasperSelectLit extends LitElement {
     this._cvs.selectedItem = this.value;
     this.hidePopover();
 
+    if (!this.lazyload) {
+      this._searchInput.value = this.items.filter(e=>e.id == this.value)[0]?.[this.textProp];
+    } else {
+      // TODO
+    }
+
     // If we dont have an item try to look for it
     !item ? item = this.items?.filter(it => it?.id == id)?.[0] : true;
 
