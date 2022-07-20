@@ -309,12 +309,12 @@ class CasperSelectLit extends LitElement {
 
         if (this.acceptUnlistedValue) this._setUnlistedValue();
 
-        this._dataLength = this.items.length;
+        // this._dataLength = this.items.length;
         await this._updateScroller();
         this._resolveItemsFilteredPromise();
       }, 250);
 
-      this._dataLength = this.items.length;
+      // this._dataLength = this.items.length;
     }
 
     this._searchInput.addEventListener('input', this._userInput.bind(this));
@@ -345,13 +345,13 @@ class CasperSelectLit extends LitElement {
     });
   }
 
-  // willUpdate (changedProperties) {
-  //   if (changedProperties.has('items')) {
-  //     if (!this.lazyload) {
-  //       this._dataLength = this.items.length;
-  //     }
-  //   }
-  // }
+  willUpdate (changedProperties) {
+    if (changedProperties.has('items')) {
+      if (!this.lazyload) {
+        this._dataLength = this.items.length;
+      }
+    }
+  }
 
   /*
    * Lit function thats called everytime an attribute changes value
