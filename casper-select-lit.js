@@ -345,6 +345,14 @@ class CasperSelectLit extends LitElement {
     });
   }
 
+  // willUpdate (changedProperties) {
+  //   if (changedProperties.has('items')) {
+  //     if (!this.lazyload) {
+  //       this._dataLength = this.items.length;
+  //     }
+  //   }
+  // }
+
   /*
    * Lit function thats called everytime an attribute changes value
    */
@@ -453,6 +461,15 @@ class CasperSelectLit extends LitElement {
     if (this._popover.open) return;
     if (event) event.stopPropagation();
     await this._popover.show();
+  }
+
+  /*
+   * Used for non lazyload mode
+   * In case you change the items more than one time
+   */
+  resetItems (items) {
+    this._dataReady = false;
+    if (items) this.items = items;
   }
 
   //***************************************************************************************//
