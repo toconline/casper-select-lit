@@ -531,15 +531,14 @@ class CasperSelectLit extends LitElement {
   }
 
   /*
-   * Subscribes a resource using table or jsonapi if we have filters
+   * Subscribes a resource using table or jsonapi if we have filters or don't have a tableName
    */
   async _subscribeResource () {
     let subscribeData =  { idColumn: this.idColumn,
                            parentColumn: 'NULL',
                            sortColumn: this.sortColumn };
 
-
-    if (this._searchValue === undefined || this._searchValue.trim() === '') {
+    if ((this._searchValue === undefined || this._searchValue.trim() === '') && this.tableName) {
       this.lazyLoadResource     = this._originalResource;
       subscribeData.tableSchema = this.tableSchema;
       subscribeData.tableName   = this.tableName;
@@ -708,14 +707,18 @@ class CasperSelectLit extends LitElement {
       resourceUrlParams.push(`filter="(${filterParams})"`);
     }
 
-    // Check if the resource URL already contains a ? which indicates some parameters were already given.
-    let modifiedResource = this._originalResource.includes('?')
-      ? `${this._originalResource}&${resourceUrlParams.join('&')}`
-      : `${this._originalResource}?${resourceUrlParams.join('&')}`;
-    // Encode % and '
-    modifiedResource = modifiedResource.replace(/%/g, "%25");
-    modifiedResource = modifiedResource.replace(/'/g, "%27");
-    return modifiedResource;
+    if (resourceUrlParams.length > 0) {
+      // Check if the resource URL already contains a ? which indicates some parameters were already given.
+      let modifiedResource = this._originalResource.includes('?')
+        ? `${this._originalResource}&${resourceUrlParams.join('&')}`
+        : `${this._originalResource}?${resourceUrlParams.join('&')}`;
+      // Encode % and '
+      modifiedResource = modifiedResource.replace(/%/g, "%25");
+      modifiedResource = modifiedResource.replace(/'/g, "%27");
+      return modifiedResource;
+    } else {
+      return this._originalResource;
+    }
   }
 
   /*
