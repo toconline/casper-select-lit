@@ -347,7 +347,7 @@ class CasperSelectLit extends LitElement {
 
   willUpdate (changedProperties) {
     if (changedProperties.has('items')) {
-      if (!this.lazyload) {
+      if (!this._lazyload) {
         this._dataLength = this.items.length;
       }
     }
@@ -412,7 +412,7 @@ class CasperSelectLit extends LitElement {
     this._cvs.selectedItem = this.value;
     this.hidePopover();
 
-    if (!this.lazyload) {
+    if (!this._lazyload) {
       this._searchInput.value = this.items.filter(e=>e.id == this.value)[0]?.[this.textProp] || item[this.textProp];
     } else {
       // TODO
