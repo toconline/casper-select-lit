@@ -32,9 +32,9 @@
     lit "^2.x"
 
 "@cloudware-casper/casper-virtual-scroller@^0.x":
-  version "0.0.10"
-  resolved "https://npm.pkg.github.com/download/@cloudware-casper/casper-virtual-scroller/0.0.10/1d96121388ec1c4bbc234462bbae240bfb8164ecce7fd538f77514bfe8fc0d74#ffe4dcde568e59efe8a29aa07cd966b4bab2bff7"
-  integrity sha512-l2sQpS/ZMEnbQ3HkIxLw5cC9DWiCpsjacLA+r2t3aj1J5tqJxztXBVBE6GpGou2hSB3DhJY8kZwWMAsFhA1zkA==
+  version "0.0.11"
+  resolved "https://npm.pkg.github.com/download/@cloudware-casper/casper-virtual-scroller/0.0.11/5bedf1b8102bee23627523822be1b4fe1660c97c21c3e370416eed708e31f2a5#3f47d65beefa44b595a9124d8cddce51472d695b"
+  integrity sha512-KCr4Qh0L5Kcv41Revo95mKBsMVgd32UbeuHLhiHRHE2QynyfMFieMAfhus06jwt2AgOJtrTqOw49WOszCtRbcQ==
   dependencies:
     lit "^2.x"
     wc-spinners "^1.1.1"

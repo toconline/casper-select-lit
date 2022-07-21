@@ -413,7 +413,7 @@ class CasperSelectLit extends LitElement {
     this.hidePopover();
 
     if (!this.lazyload) {
-      this._searchInput.value = this.items.filter(e=>e.id == this.value)[0]?.[this.textProp];
+      this._searchInput.value = this.items.filter(e=>e.id == this.value)[0]?.[this.textProp] || item[this.textProp];
     } else {
       // TODO
     }
@@ -1039,12 +1039,14 @@ class CasperSelectLit extends LitElement {
     await this._popover.update();
   }
 
-  _normalizeValue (value) {
-    return value.normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+  _normalizeValue (value, escape=false) {
+    let normalizedValue = value.normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+    if (escape) normalizedValue = normalizedValue.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return normalizedValue
   }
 
   _includesNormalized (value, search) {
-    return (this._normalizeValue(value)).match(new RegExp(this._normalizeValue(search), 'i'));
+    return (this._normalizeValue(value)).match(new RegExp(this._normalizeValue(search, true), 'i'));
   }
 }
 

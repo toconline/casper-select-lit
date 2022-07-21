@@ -24,15 +24,17 @@ class CasperHighlightable extends LitElement {
   }
 
   _specialRegex (value) {
-    return new RegExp(this._normalizeValue(value), 'ig');
+    return new RegExp(this._normalizeValue(value, true), 'ig');
   };
 
   _includesNormalized (value, search) {
     return (this._normalizeValue(value)).match(this._specialRegex(search));
   }
 
-  _normalizeValue (value) {
-    return value.normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+  _normalizeValue (value, escape=false) {
+    let normalizedValue = value.normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+    if (escape) normalizedValue = normalizedValue.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return normalizedValue;
   }
 
   firstUpdated () {
