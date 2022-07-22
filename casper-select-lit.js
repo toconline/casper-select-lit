@@ -47,6 +47,7 @@ class CasperSelectLit extends LitElement {
 
   static get properties() {
     return {
+      items: {},
       value: {
         type: String
       },
@@ -116,9 +117,6 @@ class CasperSelectLit extends LitElement {
       lazyLoadFilterFields: {
         type: Array
       },
-      items: {
-        type: Array
-      },
       lazyLoadCustomFilters: {
         type: Object
       },
@@ -184,6 +182,18 @@ class CasperSelectLit extends LitElement {
       }
     }
   }
+
+  _items = [];
+  set items(val) {
+    let oldVal = this._items;
+    if (Array.isArray(val)) {
+      this._items = val;
+    } else {
+      this._items = [];  
+    }
+    this.requestUpdate('items', oldVal);
+  }
+  get items() { return this._items; }
 
   get itemsFiltered () {
     if (!this._itemsFilteredPromise)
@@ -412,14 +422,15 @@ class CasperSelectLit extends LitElement {
     this._cvs.selectedItem = this.value;
     this.hidePopover();
 
-    if (!this._lazyload) {
-      this._searchInput.value = this.items.filter(e=>e.id == this.value)[0]?.[this.textProp] || item[this.textProp];
-    } else {
-      // TODO
+    if (this.items && this.items.length > 0) {
+      if (!this._lazyload) {
+        this._searchInput.value = this.items.filter(e=>e.id == this.value)[0]?.[this.textProp] || item[this.textProp];
+      } else {
+        // TODO
+      }
+      // If we dont have an item try to look for it
+      !item ? item = this.items?.filter(it => it?.id == id)?.[0] : true;
     }
-
-    // If we dont have an item try to look for it
-    !item ? item = this.items?.filter(it => it?.id == id)?.[0] : true;
 
     this.dispatchEvent(new CustomEvent('change', {
       detail: {
