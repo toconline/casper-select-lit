@@ -358,6 +358,7 @@ class CasperSelectLit extends LitElement {
   willUpdate (changedProperties) {
     if (changedProperties.has('items')) {
       if (!this._lazyload) {
+        this._dataReady = false;
         this._dataLength = this.items.length;
       }
     }
@@ -472,15 +473,6 @@ class CasperSelectLit extends LitElement {
     if (this._popover.open) return;
     if (event) event.stopPropagation();
     await this._popover.show();
-  }
-
-  /*
-   * Used for non lazyload mode
-   * In case you change the items more than one time
-   */
-  resetItems (items) {
-    this._dataReady = false;
-    if (items) this.items = items;
   }
 
   //***************************************************************************************//
