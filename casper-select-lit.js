@@ -11,34 +11,26 @@ class CasperSelectLit extends LitElement {
     :host {
       height: fit-content;
     }
-    .cs-suffix-icons {
+
+    .cs__suffix {
       display: inline-flex;
+      color: var(--paper-input-container-input-color, var(--primary-text-color));
     }
-    .cs-down-icon {
+
+    .cs__down-icon,
+    .cs__times-icon {
       width: 15px;
       height: 15px;
-      cursor: pointer;
-      transition: transform 0.25s linear;
-    }
-    .cs-down-icon-up {
-      transform: rotate(-180deg);
-    }
-    .cs-times-icon {
-      width: 15px;
-      height: 15px;
-      font-size: 0.3em;
       cursor: pointer;
       transition: transform 0.2s linear;
     }
-    .cs-times-icon:hover {
-      transform: rotate(-90deg);
+
+    .cs__down-icon--rotate-up {
+      transform: rotate(-180deg);
     }
-    #cvs {
-      border: 1px solid #AAA;
-      background-color: white;
-      border-radius: 0 0 3px 3px;
-      transition: width 250ms linear;
-      box-shadow: rgb(25 59 103 / 5%) 0px 0px 0px 1px, rgb(28 55 90 / 16%) 0px 2px 6px -1px, rgb(28 50 79 / 38%) 0px 8px 24px -4px;
+
+    .cs__times-icon:hover {
+      transform: rotate(-90deg);
     }
   `;
 
@@ -217,7 +209,7 @@ class CasperSelectLit extends LitElement {
     this.noLabelFloat         = false;
     this._itemsFiltered       = true;
     this._resubscribeAttempts = 10;
-    this._csInputIcon         = 'cs-down-icon-down';
+    this._csInputIcon         = '';
   }
 
   connectedCallback () {
@@ -246,9 +238,9 @@ class CasperSelectLit extends LitElement {
       <div class="main-container" style="width: ${this.width}px">
         ${this.customInput ? '' : html `
           <paper-input label="${this.label}" ?no-label-float="${this.noLabelFloat}" id="cs-input">
-            <div slot="suffix" class="cs-suffix-icons">
-              ${this.value !== undefined && !this.disableClear ? html`<casper-icon @click="${this.clearValue}" class="cs-times-icon" icon="fa-light:times"></casper-icon>` : ''}
-              <casper-icon @click="${this.togglePopover}" class="cs-down-icon ${this._csInputIcon}" icon="fa-regular:angle-down"></casper-icon>
+            <div slot="suffix" class="cs__suffix">
+              ${this.value !== undefined && !this.disableClear ? html`<casper-icon @click="${this.clearValue}" class="cs__times-icon" icon="fa-light:times"></casper-icon>` : ''}
+              <casper-icon @click="${this.togglePopover}" class="cs__down-icon ${this._csInputIcon}" icon="fa-regular:angle-down"></casper-icon>
             </div>
           </paper-input>
         `}
@@ -829,7 +821,7 @@ class CasperSelectLit extends LitElement {
     };
     this._popover.opened = async () => {
       // Callback when popover is opened
-      this._csInputIcon = 'cs-down-icon-up';
+      this._csInputIcon = 'cs__down-icon--rotate-up';
 
       // When popover opens restore search value
       this._searchInput.value = this._searchValue === undefined ? '' : this._searchValue;
@@ -867,7 +859,7 @@ class CasperSelectLit extends LitElement {
     };
     this._popover.closed = () => {
       // Callback when popover is closed
-      this._csInputIcon = 'cs-down-icon-down';
+      this._csInputIcon = '';
 
       // When popover closes clear search input if no value
       if (this.value !== undefined) {
