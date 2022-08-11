@@ -34,14 +34,11 @@ class CasperSelectLit extends LitElement {
       transform: rotate(-90deg);
     }
     #cvs {
-      overflow: auto;
       border: 1px solid #AAA;
       background-color: white;
       border-radius: 0 0 3px 3px;
       transition: width 250ms linear;
       box-shadow: rgb(25 59 103 / 5%) 0px 0px 0px 1px, rgb(28 55 90 / 16%) 0px 2px 6px -1px, rgb(28 50 79 / 38%) 0px 8px 24px -4px;
-    }
-    #cvs[open] {
     }
   `;
 
@@ -486,25 +483,6 @@ class CasperSelectLit extends LitElement {
       return this.renderLine(item, highlightValue);
     } else {
       return html`
-        <style>
-          .item-row {
-            font-size: 14px;
-          }
-          .item-row:hover {
-            background-color: var(--primary-color);
-            color: white;
-            cursor: pointer;
-          }
-          .item-row[active] {
-            background-color: var(--dark-primary-color);
-            color: white;
-          }
-          .item-row[active]:hover {
-            background-color: var(--primary-color);
-            color: white;
-            cursor: pointer;
-          }
-        </style>
         <span>
           ${ item.unlisted
           ? html `${item[this.textProp]} - Não listado`
@@ -520,16 +498,7 @@ class CasperSelectLit extends LitElement {
     if (this.renderNoItems) {
       return this.renderNoItems();
     } else {
-      return html `
-        <style>
-          .no-item-div {
-            text-align: center;
-            padding: 15px;
-            font-size: 13px;
-          }
-        </style>
-        <div class="no-item-div">Sem resultados</div>
-      `;
+      return this._cvs._renderNoItems();
     }
   }
 
