@@ -241,7 +241,7 @@ class CasperSelectLit extends LitElement {
           <paper-input label="${this.label}" ?no-label-float="${this.noLabelFloat}" id="cs-input">
             <div slot="suffix" class="cs__suffix">
               ${this.value !== undefined && !this.disableClear ? html`<casper-icon @click="${this.clearValue}" class="cs__times-icon" icon="fa-light:times"></casper-icon>` : ''}
-              <casper-icon @click="${this.togglePopover}" class="cs__down-icon ${this._csInputIcon}" icon="fa-regular:angle-down"></casper-icon>
+              <casper-icon class="cs__down-icon ${this._csInputIcon}" icon="fa-regular:angle-down"></casper-icon>
             </div>
           </paper-input>
         `}
