@@ -9,6 +9,9 @@ import CasperPopoverBehaviour from './components/casper-popover-behaviour.js';
 class CasperSelectLit extends LitElement {
   static styles = css`
     :host {
+      --cs-font-size: 1rem;
+      
+      font-size: var(--cs-font-size);
       height: fit-content;
     }
 
@@ -19,8 +22,8 @@ class CasperSelectLit extends LitElement {
 
     .cs__down-icon,
     .cs__times-icon {
-      width: 15px;
-      height: 15px;
+      width: 1rem;
+      height: 1rem;
       cursor: pointer;
       transition: transform 0.2s linear;
     }
@@ -31,6 +34,10 @@ class CasperSelectLit extends LitElement {
 
     .cs__times-icon:hover {
       transform: rotate(-90deg);
+    }
+
+    #cvs {
+      --cvs-font-size: calc(var(--cs-font-size) * 0.875);
     }
   `;
 
