@@ -210,6 +210,7 @@ class CasperSelectLit extends LitElement {
     this._itemsFiltered       = true;
     this._resubscribeAttempts = 10;
     this._csInputIcon         = '';
+    this._resetData           = true;
   }
 
   connectedCallback () {
@@ -302,6 +303,7 @@ class CasperSelectLit extends LitElement {
 
       this._debouncedFilter = this._debounce(async () => {
         // Normal filtering
+        this._resetData = false; // Bypass data reset
         this.items = this._searchValue
           ? this._initialItems.filter(item => this._includesNormalized(item[this.textProp],this._searchValue))
           : JSON.parse(JSON.stringify(this._initialItems));
@@ -347,7 +349,8 @@ class CasperSelectLit extends LitElement {
   willUpdate (changedProperties) {
     if (changedProperties.has('items')) {
       if (!this._lazyload) {
-        this._dataReady = false;
+        this._resetData ? this._dataReady = false : this._resetData = true;
+
         this._dataLength = this.items.length;
       }
     }
