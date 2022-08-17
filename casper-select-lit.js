@@ -815,7 +815,7 @@ class CasperSelectLit extends LitElement {
    * Setup the popover that contains the scroller
    */
   _setupPopover () {
-    this.fitInto = this.fitInto || this.parentElement || document.documentElement;
+    this.fitInto = this.fitInto || document.documentElement;
 
     this._popover = new CasperPopoverBehaviour(this._searchInput,
                                                this._cvs,
