@@ -254,6 +254,7 @@ class CasperSelectLit extends LitElement {
         `}
         <casper-virtual-scroller
           id="cvs"
+          part="virtual-scroller"
           delaySetup
           .items="${this.items}"
           .height="${this.height}"
