@@ -50,19 +50,16 @@ class CasperSelectLit extends LitElement {
       label: {
         type: String
       },
-      minHeight: {
+      listHeight: {
         type: Number
       },
-      height: {
+      listMinHeight: {
         type: Number
       },
-      minWidth: {
+      listMinWidth: {
         type: Number
       },
-      maxWidth: {
-        type: Number
-      },
-      width: {
+      listMaxWidth: {
         type: Number
       },
       initialId: {
@@ -209,7 +206,7 @@ class CasperSelectLit extends LitElement {
     this.textProp             = 'name';
     this.extraColumn          = 'NULL'
     this.dataSize             = 100;
-    this.minHeight            = 200;
+    this.listMinHeight        = 200;
     this._dataReady           = false;
     this.loading              = false;
     this.autoOpen             = true;
@@ -243,33 +240,31 @@ class CasperSelectLit extends LitElement {
 
   render () {
     return html`
-      <div class="main-container" style="width: ${this.width}px">
-        ${this.customInput ? '' : html `
-          <paper-input label="${this.label}" ?no-label-float="${this.noLabelFloat}" id="cs-input">
-            <div slot="suffix" class="cs__suffix">
-              ${this.value !== undefined && !this.disableClear ? html`<casper-icon @click="${this.clearValue}" class="cs__times-icon" icon="fa-light:times"></casper-icon>` : ''}
-              <casper-icon class="cs__down-icon ${this._csInputIcon}" icon="fa-regular:angle-down"></casper-icon>
-            </div>
-          </paper-input>
-        `}
-        <casper-virtual-scroller
-          id="cvs"
-          part="virtual-scroller"
-          delaySetup
-          .items="${this.items}"
-          .height="${this.height}"
-          ?loading="${this.loading}"
-          .lineCss="${this.lineCss}"
-          .textProp="${this.textProp}"
-          .dataSize="${this._dataLength}"
-          .renderLine="${this._renderLine}"
-          .startIndex="${this._initialIdx}"
-          .unlistedItem="${this._unlistedItem}"
-          .unsafeRender="${this.unsafeRender}"
-          .renderNoItems="${this._renderNoItems}"
-          .renderPlaceholder="${this.renderPlaceholder}">
-        </casper-virtual-scroller>
-      </div>
+      ${this.customInput ? '' : html `
+        <paper-input label="${this.label}" ?no-label-float="${this.noLabelFloat}" id="cs-input">
+          <div slot="suffix" class="cs__suffix">
+            ${this.value !== undefined && !this.disableClear ? html`<casper-icon @click="${this.clearValue}" class="cs__times-icon" icon="fa-light:times"></casper-icon>` : ''}
+            <casper-icon class="cs__down-icon ${this._csInputIcon}" icon="fa-regular:angle-down"></casper-icon>
+          </div>
+        </paper-input>
+      `}
+      <casper-virtual-scroller
+        id="cvs"
+        part="virtual-scroller"
+        delaySetup
+        .items="${this.items}"
+        .height="${this.listHeight}"
+        ?loading="${this.loading}"
+        .lineCss="${this.lineCss}"
+        .textProp="${this.textProp}"
+        .dataSize="${this._dataLength}"
+        .renderLine="${this._renderLine}"
+        .startIndex="${this._initialIdx}"
+        .unlistedItem="${this._unlistedItem}"
+        .unsafeRender="${this.unsafeRender}"
+        .renderNoItems="${this._renderNoItems}"
+        .renderPlaceholder="${this.renderPlaceholder}">
+      </casper-virtual-scroller>
     `;
   }
 
@@ -371,7 +366,7 @@ class CasperSelectLit extends LitElement {
     if (changedProperties.has('fitInto')) {
       // Fit into has changed, update popover
       this._popover.fitInto = this.fitInto;
-      this._popover.maxWidth = (this.maxWidth || this.fitInto.getBoundingClientRect().width);
+      this._popover.maxWidth = (this.listMaxWidth || this.fitInto.getBoundingClientRect().width);
       this._popover.resetOpts();
     }
 
@@ -821,9 +816,9 @@ class CasperSelectLit extends LitElement {
                                                this._cvs,
                                                this.fitInto,
                                                {
-                                                 minWidth: this.minWidth,
-                                                 maxWidth: this.maxWidth,
-                                                 minHeight: this.minHeight
+                                                 minWidth: this.listMinWidth,
+                                                 maxWidth: this.listMaxWidth,
+                                                 minHeight: this.listMinHeight
                                                });
 
     this._popover.flipped = (placement) => {
@@ -839,7 +834,7 @@ class CasperSelectLit extends LitElement {
 
       // Reset minimum list width to be the same as the input width
       // We wont have the final searchInput width in firstUpdated
-      this._popover.minWidth = (this.minWidth || this._searchInput.getBoundingClientRect().width);
+      this._popover.minWidth = (this.listMinWidth || this._searchInput.getBoundingClientRect().width);
       this._popover.initialMinWidth = this._popover.minWidth;
 
       if (!this._dataReady) {
