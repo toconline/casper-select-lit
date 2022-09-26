@@ -10,23 +10,25 @@ class CasperSelectLit extends LitElement {
   static styles = css`
     :host {
       --cs-font-size: 1rem;
+      --cs-prefix-margin: 0.375rem;
+      --cs-suffix-margin: 0.375rem;
       
       font-size: var(--cs-font-size);
       height: fit-content;
     }
 
-    .cs__prefix,
+    slot[name="cs-prefix"]::slotted(*),
     .cs__suffix {
       display: inline-flex;
       color: var(--paper-input-container-input-color, var(--primary-text-color));
     }
 
-    .cs__prefix {
-      margin-right: 0.375rem;
+    slot[name="cs-prefix"]::slotted(*:last-child) {
+      margin-right: var(--cs-prefix-margin) !important;
     }
 
     .cs__suffix {
-      margin-left: 0.375rem;
+      margin-left: var(--cs-suffix-margin);
     }
 
     .cs__down-icon,
@@ -251,9 +253,7 @@ class CasperSelectLit extends LitElement {
     return html`
       ${this.customInput ? '' : html `
         <paper-input label="${this.label}" ?no-label-float="${this.noLabelFloat}" id="cs-input">
-          <div slot="prefix" class="cs__prefix">
-            <slot name="prefix"></slot>
-          </div>
+          <slot name="cs-prefix" slot="prefix"></slot>
           <div slot="suffix" class="cs__suffix">
             ${this.value !== undefined && !this.disableClear ? html`<casper-icon @click="${this.clearValue}" class="cs__times-icon" icon="fa-light:times"></casper-icon>` : ''}
             <casper-icon class="cs__down-icon ${this._csInputIcon}" icon="fa-regular:angle-down"></casper-icon>
