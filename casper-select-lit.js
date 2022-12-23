@@ -294,7 +294,7 @@ class CasperSelectLit extends LitElement {
     if (this._lazyload) {
       this._setupLazyLoad();
     } else {
-      if (!this.items) {
+      if (!this.items || this.items.length === 0) {
         // If we don't have items and we are not lazyloading use classic HTML options
         const options = this.querySelectorAll('option');
         let tmpItems = [];
