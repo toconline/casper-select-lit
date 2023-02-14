@@ -50,6 +50,19 @@ class CasperSelectLit extends LitElement {
     #cvs {
       --cvs-font-size: calc(var(--cs-font-size) * 0.875);
     }
+
+    .cs__error-label {
+      color: var(--status-red);
+      font-size: 12px;
+      width: 100%;
+      min-height: 16px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin: 0;
+      padding: 0;
+      margin-top: -5px;
+    }
   `;
 
   static get properties() {
@@ -183,6 +196,9 @@ class CasperSelectLit extends LitElement {
       _initialIdx: {
         type: Number,
         attribute: false
+      },
+      error: {
+        type: String
       }
     }
   }
@@ -193,7 +209,7 @@ class CasperSelectLit extends LitElement {
     if (Array.isArray(val)) {
       this._items = val;
     } else {
-      this._items = [];  
+      this._items = [];
     }
     this.requestUpdate('items', oldVal);
   }
@@ -277,6 +293,7 @@ class CasperSelectLit extends LitElement {
         .renderNoItems="${this._renderNoItems}"
         .renderPlaceholder="${this.renderPlaceholder}">
       </casper-virtual-scroller>
+      ${this.error ? html`<p class="cs__error-label">${this.error}</p>` : ''}
     `;
   }
 
@@ -407,7 +424,7 @@ class CasperSelectLit extends LitElement {
     this.value = undefined;
     this._cvs.selectedItem = undefined;
     this._searchInput.value = this.value;
-    
+
     this.dispatchEvent(new CustomEvent('clear-value', {
       detail: {
         value: this.value,
@@ -416,7 +433,7 @@ class CasperSelectLit extends LitElement {
       composed: true
     }));
 
-
+    this.error = undefined;
     this.hidePopover();
     this.requestUpdate();
     this.blur();
@@ -440,6 +457,7 @@ class CasperSelectLit extends LitElement {
       !item ? item = this.items?.filter(it => it?.id == id)?.[0] : true;
     }
 
+    this.error = undefined;
     this.dispatchEvent(new CustomEvent('change', {
       detail: {
         value: id,
