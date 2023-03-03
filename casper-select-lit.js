@@ -420,7 +420,7 @@ class CasperSelectLit extends LitElement {
    * Clears the input
    */
   async clearValue (event) {
-    event.stopPropagation();
+    event?.stopPropagation();
     this.value = undefined;
     this._cvs.selectedItem = undefined;
     this._searchInput.value = this.value;
