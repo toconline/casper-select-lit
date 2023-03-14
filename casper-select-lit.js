@@ -443,29 +443,32 @@ class CasperSelectLit extends LitElement {
    * Sets a new value
    */
   setValue (id, item) {
-    this.value = id;
-    this._cvs.selectedItem = this.value;
-    this.hidePopover();
-
-    if (this.items && this.items.length > 0) {
-      if (!this._lazyload) {
-        this._searchInput.value = this.items.filter(e=>e.id == this.value)[0]?.[this.textProp] || item[this.textProp];
-      } else {
-        // TODO
+    if (id !== this.value) {
+      this.value = id;
+      this._cvs.selectedItem = this.value;
+  
+      if (this.items && this.items.length > 0) {
+        if (!this._lazyload) {
+          this._searchInput.value = this.items.filter(e=>e.id == this.value)[0]?.[this.textProp] || item[this.textProp];
+        } else {
+          // TODO
+        }
+        // If we dont have an item try to look for it
+        !item ? item = this.items?.filter(it => it?.id == id)?.[0] : true;
       }
-      // If we dont have an item try to look for it
-      !item ? item = this.items?.filter(it => it?.id == id)?.[0] : true;
+  
+      this.error = undefined;
+      this.dispatchEvent(new CustomEvent('change', {
+        detail: {
+          value: id,
+          item: item
+        },
+        bubbles: true,
+        composed: true
+      }));
     }
 
-    this.error = undefined;
-    this.dispatchEvent(new CustomEvent('change', {
-      detail: {
-        value: id,
-        item: item
-      },
-      bubbles: true,
-      composed: true
-    }));
+    this.hidePopover();
   }
 
   /*
