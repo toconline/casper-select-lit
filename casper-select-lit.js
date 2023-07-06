@@ -405,6 +405,8 @@ class CasperSelectLit extends LitElement {
 
     if (changedProperties.has('items')) {
       this._itemsChanged();
+
+      if (!this._lazyload) this._initialIdChanged();
     }
 
     if (changedProperties.has('_searchValue')) {
