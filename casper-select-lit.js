@@ -301,7 +301,7 @@ class CasperSelectLit extends LitElement {
    * Lit function thats called when component finishes the first render
    */
   firstUpdated () {
-    this._searchInput = this.customInput || this.shadowRoot.getElementById('cs-input');
+    this.searchInput = this.customInput || this.shadowRoot.getElementById('cs-input');
     this._cvs = this.shadowRoot.getElementById('cvs');
 
     this._setupPopover();
@@ -350,7 +350,7 @@ class CasperSelectLit extends LitElement {
       // this._dataLength = this.items.length;
     }
 
-    this._searchInput.addEventListener('input', this._userInput.bind(this));
+    this.searchInput.addEventListener('input', this._userInput.bind(this));
     this._cvs.addEventListener('cvs-line-selected', (event) => {
       if (event && event.detail) {
         this._inputString = event.detail.name;
@@ -358,7 +358,7 @@ class CasperSelectLit extends LitElement {
       }
     });
 
-    this._searchInput.addEventListener('keydown', async (event) => {
+    this.searchInput.addEventListener('keydown', async (event) => {
 
       // Avoid messing with the input cursor
       switch (event.key) {
@@ -425,7 +425,7 @@ class CasperSelectLit extends LitElement {
     event?.stopPropagation();
     this.value = undefined;
     this._cvs.selectedItem = undefined;
-    this._searchInput.value = this.value;
+    this.searchInput.value = this.value;
 
     this.dispatchEvent(new CustomEvent('clear-value', {
       detail: {
@@ -436,6 +436,7 @@ class CasperSelectLit extends LitElement {
     }));
 
     this.error = undefined;
+    if (this.searchInput.invalid) this.searchInput.invalid = false;
     this.hidePopover();
     this.requestUpdate();
     this.blur();
@@ -451,7 +452,7 @@ class CasperSelectLit extends LitElement {
   
       if (this.items && this.items.length > 0) {
         if (!this._lazyload) {
-          this._searchInput.value = this.items.filter(e=>e.id == this.value)[0]?.[this.textProp] || item[this.textProp];
+          this.searchInput.value = this.items.filter(e=>e.id == this.value)[0]?.[this.textProp] || item[this.textProp];
         } else {
           // TODO
         }
@@ -460,6 +461,7 @@ class CasperSelectLit extends LitElement {
       }
   
       this.error = undefined;
+      if (this.searchInput.invalid) this.searchInput.invalid = false;
       this.dispatchEvent(new CustomEvent('change', {
         detail: {
           value: id,
@@ -792,7 +794,7 @@ class CasperSelectLit extends LitElement {
    */
   _userInput (e) {
     if (e && e.inputType) {
-      this._searchValue = this._searchInput.value;
+      this._searchValue = this.searchInput.value;
     }
   }
 
@@ -847,7 +849,7 @@ class CasperSelectLit extends LitElement {
   _setupPopover () {
     this.fitInto = this.fitInto || document.documentElement;
 
-    this._popover = new CasperPopoverBehaviour(this._searchInput,
+    this._popover = new CasperPopoverBehaviour(this.searchInput,
                                                this._cvs,
                                                this.fitInto,
                                                {
@@ -865,11 +867,11 @@ class CasperSelectLit extends LitElement {
       this._csInputIcon = 'cs__down-icon--rotate-up';
 
       // When popover opens restore search value
-      this._searchInput.value = this._searchValue === undefined ? '' : this._searchValue;
+      this.searchInput.value = this._searchValue === undefined ? '' : this._searchValue;
 
       // Reset minimum list width to be the same as the input width
       // We wont have the final searchInput width in firstUpdated
-      this._popover.minWidth = (this.listMinWidth || this._searchInput.getBoundingClientRect().width);
+      this._popover.minWidth = (this.listMinWidth || this.searchInput.getBoundingClientRect().width);
       this._popover.initialMinWidth = this._popover.minWidth;
 
       if (!this._dataReady) {
@@ -905,16 +907,16 @@ class CasperSelectLit extends LitElement {
       // When popover closes clear search input if no value
       if (this.value !== undefined) {
         if (this._lazyload) {
-          this._searchInput.value = this._freshItems.filter(e=>e.id == this.value)[0]?.[this.textProp];
-          if (this._searchInput.value === undefined) this._searchInput.value = this._inputString;
+          this.searchInput.value = this._freshItems.filter(e=>e.id == this.value)[0]?.[this.textProp];
+          if (this.searchInput.value === undefined) this.searchInput.value = this._inputString;
         } else {
-          this._searchInput.value = this._initialItems.filter(e=>e.id == this.value)[0]?.[this.textProp];
+          this.searchInput.value = this._initialItems.filter(e=>e.id == this.value)[0]?.[this.textProp];
         }
-        if (this.acceptUnlistedValue && this._searchInput.value === undefined) {
-          this._searchInput.value = this.value
+        if (this.acceptUnlistedValue && this.searchInput.value === undefined) {
+          this.searchInput.value = this.value
         }
       } else {
-        this._searchInput.value = '';
+        this.searchInput.value = '';
       }
       this.requestUpdate();
       this.dispatchEvent(new CustomEvent('popover-closed', {
@@ -973,7 +975,7 @@ class CasperSelectLit extends LitElement {
           const response = await this.socket.jget(completeUrl, 3000);
 
           this._inputString = response.data?.[this.textProp];
-          this._searchInput.value = response.data?.[this.textProp];
+          this.searchInput.value = response.data?.[this.textProp];
 
           if (this.resourceFormatter) {
             this.resourceFormatter.call(this.page || {}, response.data,  response.included, this._searchValue);
@@ -988,7 +990,7 @@ class CasperSelectLit extends LitElement {
                 const response = await this.socket.jget(completeUrl, 3000);
 
                 this._inputString = response.data?.[this.textProp];
-                this._searchInput.value = response.data?.[this.textProp];
+                this.searchInput.value = response.data?.[this.textProp];
 
                 if (this.resourceFormatter) {
                   this.resourceFormatter.call(this.page || {}, response.data,  response.included, this._searchValue);
@@ -1012,7 +1014,7 @@ class CasperSelectLit extends LitElement {
           if (this.items[idx].id === this.initialId) {
             this._initialIdx = idx;
             this._inputString = this.items[idx][this.textProp];
-            this._searchInput.value = this.items[idx][this.textProp];
+            this.searchInput.value = this.items[idx][this.textProp];
             break;
           }
         }
