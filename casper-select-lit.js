@@ -155,6 +155,9 @@ class CasperSelectLit extends LitElement {
       renderPlaceholder: {
         type: Function
       },
+      renderSeparator: {
+        type: Function
+      },
       renderLine: {
         type: Function
       },
@@ -291,6 +294,7 @@ class CasperSelectLit extends LitElement {
         .unlistedItem="${this._unlistedItem}"
         .unsafeRender="${this.unsafeRender}"
         .renderNoItems="${this._renderNoItems}"
+        .renderSeparator="${this.renderSeparator}"
         .renderPlaceholder="${this.renderPlaceholder}">
       </casper-virtual-scroller>
       ${this.error ? html`<p class="cs__error-label">${this.error}</p>` : ''}
@@ -337,7 +341,7 @@ class CasperSelectLit extends LitElement {
         // Normal filtering
         this._resetData = false; // Bypass data reset
         this.items = this._searchValue
-          ? this._initialItems.filter(item => this._includesNormalized(item[this.textProp],this._searchValue))
+          ? this._initialItems.filter(item => !item.separator && this._includesNormalized(item[this.textProp],this._searchValue))
           : JSON.parse(JSON.stringify(this._initialItems));
 
         if (this.acceptUnlistedValue) this._setUnlistedValue();
@@ -405,8 +409,6 @@ class CasperSelectLit extends LitElement {
 
     if (changedProperties.has('items')) {
       this._itemsChanged();
-
-      if (!this._lazyload) this._initialIdChanged();
     }
 
     if (changedProperties.has('_searchValue')) {
