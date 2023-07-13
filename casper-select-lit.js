@@ -52,7 +52,7 @@ class CasperSelectLit extends LitElement {
     }
 
     .cs__error-label {
-      color: var(--status-red);
+      color: var(--error-color);
       font-size: 12px;
       width: 100%;
       min-height: 16px;
