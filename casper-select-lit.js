@@ -447,8 +447,8 @@ class CasperSelectLit extends LitElement {
   /*
    * Sets a new value
    */
-  setValue (id, item) {
-    if (id !== this.value) {
+  setValue (id, item, force = false) {
+    if (id !== this.value || force) {
       this.value = id;
       this._cvs.selectedItem = this.value;
   
@@ -1027,6 +1027,10 @@ class CasperSelectLit extends LitElement {
   _itemsChanged () {
     // Reset Width
     this._popover.resetMinWidth = true;
+
+    if (this.value && !this.lazyload) {
+      this.setValue(this.value, null, true);
+    }
   }
 
   _setUnlistedValue () {
