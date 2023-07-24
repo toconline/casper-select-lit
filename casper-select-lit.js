@@ -167,6 +167,9 @@ class CasperSelectLit extends LitElement {
       acceptUnlistedValue: {
         type: Boolean
       },
+      filterOnly: {
+        type: Boolean
+      },
       _unlistedItem: {
         type: Object,
         attribute: false
@@ -245,6 +248,7 @@ class CasperSelectLit extends LitElement {
     this.autoOpen             = true;
     this.noLabelFloat         = false;
     this.alwaysFloatLabel     = false;
+    this.filterOnly           = false;
     this._itemsFiltered       = true;
     this._resubscribeAttempts = 10;
     this._csInputIcon         = '';
@@ -547,6 +551,8 @@ class CasperSelectLit extends LitElement {
    * Subscribes a resource using table or jsonapi if we have filters or don't have a tableName
    */
   async _subscribeResource () {
+    if (this.filterOnly && (this._searchValue === undefined || this._searchValue.trim() === '')) return false;
+
     let subscribeData =  { idColumn: this.idColumn,
                            parentColumn: 'NULL',
                            sortColumn: this.sortColumn };
@@ -743,13 +749,20 @@ class CasperSelectLit extends LitElement {
 
     this._initialIdx = 0;
     const subscribeResponse = await this._subscribeResource();
-    const activeId = subscribeResponse.user_first_id;
+
+    if (subscribeResponse === false) {
+      this.loading = false;
+      this._resolveItemsFilteredPromise();
+      return;
+    }
 
     if (subscribeResponse.resource !== this.lazyLoadResource) {
       // Jump out if lazyLoadResource has already been changed
       this._resolveItemsFilteredPromise();
       return;
     }
+
+    const activeId = subscribeResponse.user_first_id;
 
     if (this._dataLength > 0) {
       const response = await this.socket.getLazyload(this.lazyLoadResource, {idColumn: this.idColumn, activeId: +activeId, activeIndex: +this._initialIdx, ratio: 1}, 3000);
@@ -810,7 +823,13 @@ class CasperSelectLit extends LitElement {
       this.requestUpdate();
 
       // Subscribe to the resource
-      await this._subscribeResource();
+      const subscribeResponse = await this._subscribeResource();
+
+      if (subscribeResponse === false) {
+        this.loading = false;
+        await this._cvs.initialSetup();
+        return;
+      }
 
       // Find the index of the initial id
       const initialIndex = await this._getIndexForId((+this.initialId || 0));
