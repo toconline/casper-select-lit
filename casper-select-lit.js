@@ -170,6 +170,9 @@ class CasperSelectLit extends LitElement {
       filterOnly: {
         type: Boolean
       },
+      useTsvFilter: {
+        type: Boolean
+      },
       _unlistedItem: {
         type: Object,
         attribute: false
@@ -249,6 +252,7 @@ class CasperSelectLit extends LitElement {
     this.noLabelFloat         = false;
     this.alwaysFloatLabel     = false;
     this.filterOnly           = false;
+    this.useTsvFilter         = false;
     this._itemsFiltered       = true;
     this._resubscribeAttempts = 10;
     this._csInputIcon         = '';
@@ -692,7 +696,7 @@ class CasperSelectLit extends LitElement {
     let resourceUrlParams = [];
     let filterParams = Object.values(this.lazyLoadCustomFilters || {}).filter(field => field).join(' AND ');
 
-    if (this._searchValue && this.lazyLoadFilterFields) {
+    if (this._searchValue && this.lazyLoadFilterFields && !this.useTsvFilter) {
       // Escape the % characters that have a special meaning in the ILIKE clause.
       let escapedSearchInputValue = this._searchValue.replace(/[%\\]/g, '\$&');
       escapedSearchInputValue = escapedSearchInputValue.replace(/[&]/g, '_');
@@ -720,6 +724,12 @@ class CasperSelectLit extends LitElement {
           ? filterParams += ` AND (${customFilterParams})`
           : filterParams += customFilterParams;
       }
+    } else if (this._searchValue && this.useTsvFilter) {
+      // Escape the % characters that have a special meaning in the ILIKE clause.
+      let escapedSearchInputValue = this._searchValue.replace(/[%\\]/g, '\$&');
+      escapedSearchInputValue = escapedSearchInputValue.replace(/[&]/g, '_');
+
+      filterParams = `tsv @@ plainto_tsquery('portuguese', unaccent('${escapedSearchInputValue}'))`;
     }
 
     if (filterParams) {
@@ -784,7 +794,7 @@ class CasperSelectLit extends LitElement {
   }
 
   _filterItems () {
-    if ((!this._lazyload || this.lazyLoadFilterFields) && this._dataReady) {
+    if ((!this._lazyload || this.lazyLoadFilterFields || this.useTsvFilter) && this._dataReady) {
       this._itemsFiltered = false;
       this._debouncedFilter();
     }
