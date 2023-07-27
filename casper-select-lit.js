@@ -12,7 +12,7 @@ class CasperSelectLit extends LitElement {
       --cs-font-size: 1rem;
       --cs-prefix-margin: 0.375rem;
       --cs-suffix-margin: 0.375rem;
-      
+
       font-size: var(--cs-font-size);
       height: fit-content;
     }
@@ -463,7 +463,7 @@ class CasperSelectLit extends LitElement {
     if (id !== this.value || force) {
       this.value = id;
       this._cvs.selectedItem = this.value;
-  
+
       if (this.items && this.items.length > 0) {
         if (!this._lazyload) {
           this.searchInput.value = this.items.filter(e=>e.id == this.value)[0]?.[this.textProp] || item[this.textProp];
@@ -473,7 +473,7 @@ class CasperSelectLit extends LitElement {
         // If we dont have an item try to look for it
         !item ? item = this.items?.filter(it => it?.id == id)?.[0] : true;
       }
-  
+
       this.error = undefined;
       if (this.searchInput.invalid) this.searchInput.invalid = false;
       this.dispatchEvent(new CustomEvent('change', {
@@ -729,7 +729,19 @@ class CasperSelectLit extends LitElement {
       let escapedSearchInputValue = this._searchValue.replace(/[%\\]/g, '\$&');
       escapedSearchInputValue = escapedSearchInputValue.replace(/[&]/g, '_');
 
-      filterParams = `tsv @@ plainto_tsquery('portuguese', unaccent('${escapedSearchInputValue}'))`;
+      //
+      // Add filters of to_tsquery to string coming from user
+      //
+      escapedSearchInputValue = escapedSearchInputValue.split(' ');
+      escapedSearchInputValue.forEach((string, idx) => {
+        if (string != '') {
+          escapedSearchInputValue[idx] += ':*';
+          if (idx < escapedSearchInputValue.length - 1 && escapedSearchInputValue[idx + 1] != '') {
+            escapedSearchInputValue[idx] += ' & ';
+          }
+        }
+      });
+      filterParams = `tsv @@ to_tsquery('portuguese', unaccent('${escapedSearchInputValue.join('')}'))`;
     }
 
     if (filterParams) {
