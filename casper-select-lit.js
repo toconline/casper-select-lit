@@ -756,6 +756,7 @@ class CasperSelectLit extends LitElement {
       // Encode % and '
       modifiedResource = modifiedResource.replace(/%/g, "%25");
       modifiedResource = modifiedResource.replace(/'/g, "%27");
+      modifiedResource = modifiedResource.replace(/&/g, "%26");
       return modifiedResource;
     } else {
       return this._originalResource;
