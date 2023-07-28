@@ -271,7 +271,7 @@ class CasperSelectLit extends LitElement {
     if (this._popover) {
       this._popover.clear();
     }
-    if (this.socket) {
+    if (this.socket && this.socket.isOpen()) {
       this.socket.unsubscribeAllLazyload(3000);
     }
   }
