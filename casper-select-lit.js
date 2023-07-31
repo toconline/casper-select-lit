@@ -1083,7 +1083,7 @@ class CasperSelectLit extends LitElement {
     // Reset Width
     this._popover.resetMinWidth = true;
 
-    if (this.value && !this._lazyload) {
+    if (this.value && !this._lazyload && this._searchValue === undefined) {
       this.setValue(this.value, null, true);
     }
   }
