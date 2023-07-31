@@ -475,7 +475,7 @@ class CasperSelectLit extends LitElement {
 
       if (this.items && this.items.length > 0) {
         if (!this._lazyload) {
-          this.searchInput.value = this.items.filter(e=>e.id == this.value)[0]?.[this.textProp] || item[this.textProp];
+          this.searchInput.value = this.items.filter(e=>e.id == this.value)[0]?.[this.textProp] || item?.[this.textProp];
         } else {
           // TODO
         }
