@@ -122,6 +122,10 @@ class CasperSelectLit extends LitElement {
       highlight: {
         type: Boolean
       },
+      disabled: {
+        type: Boolean,
+        reflect: true
+      },
       disableClear: {
         type: Boolean
       },
@@ -253,6 +257,7 @@ class CasperSelectLit extends LitElement {
     this.alwaysFloatLabel     = false;
     this.filterOnly           = false;
     this.useTsvFilter         = false;
+    this.disabled = false;
     this._itemsFiltered       = true;
     this._resubscribeAttempts = 10;
     this._csInputIcon         = '';
@@ -425,6 +430,10 @@ class CasperSelectLit extends LitElement {
 
     if (changedProperties.has('_searchValue')) {
       this._filterItems();
+    }
+
+    if (changedProperties.has('disabled')) {
+      this.searchInput.disabled = this.disabled;
     }
   }
 
