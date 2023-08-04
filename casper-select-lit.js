@@ -177,6 +177,12 @@ class CasperSelectLit extends LitElement {
       useTsvFilter: {
         type: Boolean
       },
+      oldLazyLoad: {
+        type: Boolean
+      },
+      oldLazyLoadPageSize: {
+        type: Number
+      },
       _unlistedItem: {
         type: Object,
         attribute: false
@@ -249,7 +255,7 @@ class CasperSelectLit extends LitElement {
     this.textProp             = 'name';
     this.extraColumn          = 'NULL'
     this.dataSize             = 100;
-    this.listMinHeight        = 200;
+    this.listMinHeight        = 75;
     this._dataReady           = false;
     this.loading              = false;
     this.autoOpen             = true;
@@ -257,7 +263,9 @@ class CasperSelectLit extends LitElement {
     this.alwaysFloatLabel     = false;
     this.filterOnly           = false;
     this.useTsvFilter         = false;
-    this.disabled = false;
+    this.oldLazyLoad          = false;
+    this.oldLazyLoadPageSize  = 100;
+    this.disabled             = false;
     this._itemsFiltered       = true;
     this._resubscribeAttempts = 10;
     this._csInputIcon         = '';
@@ -322,15 +330,18 @@ class CasperSelectLit extends LitElement {
    * Lit function thats called when component finishes the first render
    */
   firstUpdated () {
+    this.socket = this.socket || window.app?.socket2;
     this.searchInput = this.customInput || this.shadowRoot.getElementById('cs-input');
     this._cvs = this.shadowRoot.getElementById('cvs');
 
     this._setupPopover();
 
-    this.lazyLoadResource ? this._lazyload = true : this._lazyload = false;
+    (this.lazyLoadResource && !this.oldLazyLoad) ? this._lazyload = true : this._lazyload = false;
 
     if (this._lazyload) {
       this._setupLazyLoad();
+    } else if (this.oldLazyLoad) {
+      this._setupOldLazyLoad();
     } else {
       if (!this.items || this.items.length === 0) {
         // If we don't have items and we are not lazyloading use classic HTML options
@@ -401,7 +412,7 @@ class CasperSelectLit extends LitElement {
 
   willUpdate (changedProperties) {
     if (changedProperties.has('items')) {
-      if (!this._lazyload) {
+      if (!this._lazyload && !this.oldLazyLoad) {
         this._resetData ? this._dataReady = false : this._resetData = true;
 
         this._dataLength = this.items.length;
@@ -888,6 +899,11 @@ class CasperSelectLit extends LitElement {
       this.items.forEach(item => { if (this.resourceFormatter) { this.resourceFormatter.call(this.page || {}, item, responseIncluded, this._searchValue); } });
       this._freshItems = JSON.parse(JSON.stringify(this.items));
       this.loading = false;
+    } else if (this.oldLazyLoad) {
+      this.loading = true;
+      this.requestUpdate();
+      await this._loadMoreItems('scroll');
+      this.loading = false;
     } else {
       this._initialItems = JSON.parse(JSON.stringify(this.items));
     }
@@ -966,6 +982,9 @@ class CasperSelectLit extends LitElement {
         if (this._lazyload) {
           this.searchInput.value = this._freshItems.filter(e=>e.id == this.value)[0]?.[this.textProp];
           if (this.searchInput.value === undefined) this.searchInput.value = this._inputString;
+        } else if (this.oldLazyLoad) {
+          this.searchInput.value = this.items.filter(e=>e.id == this.value)[0]?.[this.textProp];
+          if (this.searchInput.value === undefined) this.searchInput.value = this._inputString;
         } else {
           this.searchInput.value = this._initialItems.filter(e=>e.id == this.value)[0]?.[this.textProp];
         }
@@ -1011,6 +1030,26 @@ class CasperSelectLit extends LitElement {
 
     this._requested = false;
     this._requestQueue = undefined;
+  }
+
+
+  /*
+   * Setup old school lazyload functions, listeners, etc
+   */
+  async _setupOldLazyLoad () {
+    this._debouncedFilter = this._debounce(() => {
+      this._loadMoreItems();
+    }, 250);
+
+    this._cvs.addEventListener('cvs-request-items', async (event) => {
+      if (!this._requested && event.detail.direction !== 'up') {
+        this._requested = true;
+        console.log('requesting scroll items!');
+        await this._loadMoreItems('scroll', event.detail.index);
+        this._updateScroller();
+      }
+    });
+    this._requested = false;
   }
 
   /*
@@ -1118,6 +1157,141 @@ class CasperSelectLit extends LitElement {
 
   _includesNormalized (value, search) {
     return (this._normalizeValue(value)).match(new RegExp(this._normalizeValue(search, true), 'i'));
+  }
+
+
+  /*
+   *  OLD SCHOOL LAZYLOAD METHODS (ported from old casper-select)
+   */
+
+  async _loadMoreItems (eventSource = 'search', index = 0) {
+    if (!this.lazyLoadResource || !this.oldLazyLoad) {
+      this._resolveItemsFilteredPromise();
+      return;
+    }
+
+    const triggeredFromSearch = eventSource === 'search';
+
+    await this.updateComplete;
+
+    // Used to not trigger an additional query for a repeated search for when the user opens the select.
+    if (triggeredFromSearch && this.searchInput && this.searchInput.value === this._lastQuery) {
+      this._resolveItemsFilteredPromise();
+      return;
+    }
+
+    // This means the filter has changed therefore you reset the page number and the disabled flag.
+    if (triggeredFromSearch || !this._lazyLoadCurrentPage) {
+      this._lazyLoadCurrentPage = 0;
+      this._lazyLoadDisabled = false;
+    }
+
+    if (this._lazyLoadDisabled) {
+      this._resolveItemsFilteredPromise();
+      return;
+    }
+    
+    this.loading = true;
+    const socketResponse = await this.socket.jget(this._loadMoreItemsUrl(), 5000);
+
+    // Hide the spinner and reset the scroll triggers.
+    this.loading = false;
+    this._requested = false;
+
+    // Calculate the total number of existing pages.
+    this._dataLength = parseInt(socketResponse.meta.total);
+
+    // Fetch the relationships data which falls under the 'included' key.
+    const includedData = socketResponse.included ? socketResponse.included : null;
+    const resultsIncludedData = {};
+    if (includedData && includedData.length > 0) {
+      includedData.forEach(included => {
+        if (!resultsIncludedData[included.type]) {
+          resultsIncludedData[included.type] = {};
+        }
+        resultsIncludedData[included.type][included.id] = included;
+      });
+    }
+
+    // Either replace the all items list if it was triggered by a search or append if it's a scroll event.
+    const currentItems = this.items || [];
+    const formattedResultItems = !this.resourceFormatter
+      ? socketResponse.data
+      : socketResponse.data.map(item => this.resourceFormatter(item, resultsIncludedData));
+
+    const resultItems = triggeredFromSearch
+      ? formattedResultItems
+      : [...currentItems, ...formattedResultItems];
+
+    // This is used so that we can push the elements into the list instead of directly replacing them
+    // which would cause iron-list to scroll to its top.
+    if (!triggeredFromSearch && this._lazyLoadCurrentPage !== 1) {
+      this._cvs.appendEnd(index, formattedResultItems);
+    } else {
+      this.items = resultItems;
+    }
+
+    // Save the last query in case there are no results.
+    if (triggeredFromSearch && socketResponse.data.length === 0) this._lastQuery = this.searchInput.value;
+
+    // Disable further socket queries if there are no more results.
+    this._lazyLoadDisabled = this.items.length === this._dataLength;
+    this._resolveItemsFilteredPromise();
+  }
+
+  _loadMoreItemsUrl () {
+    this._lazyLoadCurrentPage++;
+
+    // Apply the metadata, page size and current page number.
+    let resourceUrlParams = ['totals=1'];
+
+    resourceUrlParams = resourceUrlParams.concat([
+      `page[size]=${this.oldLazyLoadPageSize}`,
+      `page[number]=${this._lazyLoadCurrentPage}`
+    ]);
+
+    let filterParams = Object.values(this.lazyLoadCustomFilters || {}).filter(field => field).join(' AND ');
+
+    if (this.searchInput && this.searchInput.value && this.lazyLoadFilterFields) {
+      // Escape the % characters that have a special meaning in the ILIKE clause.
+      let escapedSearchInputValue = this.searchInput.value.replace(/[%\\]/g, '\$&');
+      escapedSearchInputValue = escapedSearchInputValue.replace(/[&]/g, '_');
+
+      // Build the filter parameters.
+      const customFilterParams = this.lazyLoadFilterFields
+        .filter(filterField => !Object.keys(this.lazyLoadCustomFilters || {}).includes(filterField.constructor === String ? filterField : filterField.field))
+        .map(filterField => {
+          if (filterField.constructor === String) {
+            return `unaccent(${filterField}::TEXT) ILIKE unaccent('%${escapedSearchInputValue}%')`;
+          }
+          if (filterField.constructor === Object && filterField.field && filterField.filterType) {
+            switch (filterField.filterType) {
+              case 'exact': return `unaccent(${filterField.field}::TEXT) ILIKE unaccent('${escapedSearchInputValue}')`;
+              case 'endsWith': return `unaccent(${filterField.field}::TEXT) ILIKE unaccent('%${escapedSearchInputValue}')`;
+              case 'contains': return `unaccent(${filterField.field}::TEXT) ILIKE unaccent('%${escapedSearchInputValue}%')`;
+              case 'startsWith': return `unaccent(${filterField.field}::TEXT) ILIKE unaccent('${escapedSearchInputValue}%')`;
+            }
+          }
+        }).join(' OR ');
+
+      if (customFilterParams) {
+        filterParams
+          ? filterParams += ` AND (${customFilterParams})`
+          : filterParams += customFilterParams;
+      }
+    }
+
+    if (filterParams) {
+      filterParams = filterParams.replace(/%/g, "%25");
+      filterParams = filterParams.replace(/'/g, "%27");
+      filterParams = filterParams.replace(/&/g, "%26");
+      resourceUrlParams.push(`filter="(${filterParams})"`);
+    }
+
+    // Check if the resource URL already contains a ? which indicates some parameters were already given.
+    return this.lazyLoadResource.includes('?')
+      ? `${this.lazyLoadResource}&${resourceUrlParams.join('&')}`
+      : `${this.lazyLoadResource}?${resourceUrlParams.join('&')}`;
   }
 }
 
