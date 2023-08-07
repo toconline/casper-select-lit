@@ -1037,6 +1037,8 @@ class CasperSelectLit extends LitElement {
    * Setup old school lazyload functions, listeners, etc
    */
   async _setupOldLazyLoad () {
+    this._loadedPages = new Set();
+
     this._debouncedFilter = this._debounce(() => {
       this._loadMoreItems();
     }, 250);
@@ -1180,9 +1182,10 @@ class CasperSelectLit extends LitElement {
       return;
     }
 
-    // This means the filter has changed therefore you reset the page number and the disabled flag.
-    if (triggeredFromSearch || !this._lazyLoadCurrentPage) {
-      this._lazyLoadCurrentPage = 0;
+    // This means the filter has changed therefore you reset loaded pages and the disabled flag.
+    if (triggeredFromSearch) {
+      this.loading = true;
+      this._loadedPages = new Set();
       this._lazyLoadDisabled = false;
     }
 
@@ -1190,13 +1193,21 @@ class CasperSelectLit extends LitElement {
       this._resolveItemsFilteredPromise();
       return;
     }
-    
-    this.loading = true;
-    const socketResponse = await this.socket.jget(this._loadMoreItemsUrl(), 5000);
 
-    // Hide the spinner and reset the scroll triggers.
-    this.loading = false;
+    const pageToLoad = Math.max(Math.ceil((index/this._dataLength)*Math.ceil(this._dataLength/this.oldLazyLoadPageSize)),1) || 1;
+
+    //Page alreadly loaded, return
+    if (this._loadedPages.has(pageToLoad)) {
+      this._resolveItemsFilteredPromise();
+      return;
+    }
+
+    const socketResponse = await this.socket.jget(this._loadMoreItemsUrl(pageToLoad), 5000);
+
+    this._loadedPages.add(pageToLoad);
+
     this._requested = false;
+    this.loading = false;
 
     // Calculate the total number of existing pages.
     this._dataLength = parseInt(socketResponse.meta.total);
@@ -1225,8 +1236,8 @@ class CasperSelectLit extends LitElement {
 
     // This is used so that we can push the elements into the list instead of directly replacing them
     // which would cause iron-list to scroll to its top.
-    if (!triggeredFromSearch && this._lazyLoadCurrentPage !== 1) {
-      this._cvs.appendEnd(index, formattedResultItems);
+    if (!triggeredFromSearch && index > 0) {
+      this._cvs.appendEnd((pageToLoad-1)*this.oldLazyLoadPageSize, formattedResultItems);
     } else {
       this.items = resultItems;
     }
@@ -1235,19 +1246,18 @@ class CasperSelectLit extends LitElement {
     if (triggeredFromSearch && socketResponse.data.length === 0) this._lastQuery = this.searchInput.value;
 
     // Disable further socket queries if there are no more results.
-    this._lazyLoadDisabled = this.items.length === this._dataLength;
+    this._lazyLoadDisabled = this._cvs.renderedItemsLength === this._dataLength;
     this._resolveItemsFilteredPromise();
   }
 
-  _loadMoreItemsUrl () {
-    this._lazyLoadCurrentPage++;
+  _loadMoreItemsUrl (pageToLoad) {
 
     // Apply the metadata, page size and current page number.
     let resourceUrlParams = ['totals=1'];
 
     resourceUrlParams = resourceUrlParams.concat([
       `page[size]=${this.oldLazyLoadPageSize}`,
-      `page[number]=${this._lazyLoadCurrentPage}`
+      `page[number]=${pageToLoad}`
     ]);
 
     let filterParams = Object.values(this.lazyLoadCustomFilters || {}).filter(field => field).join(' AND ');
