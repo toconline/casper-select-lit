@@ -363,8 +363,6 @@ class CasperSelectLit extends LitElement {
         }
       }
 
-      // this._initialIdChanged(); // TODO: do we need this?
-
       this._debouncedFilter = this._debounce(async () => {
         // Normal filtering
         this._resetData = false; // Bypass data reset
@@ -479,19 +477,25 @@ class CasperSelectLit extends LitElement {
   /*
    * Sets a new value
    */
-  setValue (id, item, force = false) {
+  async setValue (id, item, force = false) {
     if (id !== this.value || force) {
       this.value = id;
       this._cvs.selectedItem = this.value;
 
       if (this.items && this.items.length > 0) {
-        if (!this._lazyload) {
-          this.searchInput.value = this.items.filter(e=>e.id == this.value)[0]?.[this.textProp] || item?.[this.textProp];
-        } else {
-          // TODO
+        for (let idx = 0; idx < this.items.length; idx++) {
+          if (this.items[idx].id === this.value) {
+            this._initialIdx = idx;
+            this._inputString = this.items[idx][this.textProp];
+            this.searchInput.value = this.items[idx][this.textProp];
+            break;
+          }
         }
         // If we dont have an item try to look for it
-        !item ? item = this.items?.filter(it => it?.id == id)?.[0] : true;
+        !item ? item = this.items?.filter(it => it?.id == this.value)?.[0] : true;
+      } else if (this._lazyload || this.oldLazyLoad) {
+        // No items yet? fake it
+        !item ? item = await this._setSingleItem(id) : true;
       }
 
       this.error = undefined;
@@ -1026,8 +1030,6 @@ class CasperSelectLit extends LitElement {
       }
     });
 
-    // await this._initialIdChanged(); TODO: Do we need this?
-
     this._requested = false;
     this._requestQueue = undefined;
   }
@@ -1054,69 +1056,59 @@ class CasperSelectLit extends LitElement {
     this._requested = false;
   }
 
+  async _setSingleItem (id) {
+    let completeUrl = '';
+    try {
+      await this.updateComplete;
+
+      const resourceName = this.lazyLoadResource.split('?')[0];
+      const resourceParameters = this.lazyLoadResource.split('?')[1];
+
+      completeUrl = `${resourceName}/${id}${resourceParameters ? `?${resourceParameters}` : ''}`;
+
+      const response = await this.socket.jget(completeUrl, 3000);
+      
+      if (this.resourceFormatter) {
+        this.resourceFormatter.call(this.page || {}, response.data,  response.included, this._searchValue);
+      }
+
+      this._inputString = response.data?.[this.textProp];
+      this.searchInput.value = response.data?.[this.textProp];
+
+      return response.data;
+    } catch (error) {
+      if (error.code == 11) {
+        setTimeout(async () => {
+          try {
+            const response = await this.socket.jget(completeUrl, 3000);
+
+            if (this.resourceFormatter) {
+              this.resourceFormatter.call(this.page || {}, response.data,  response.included, this._searchValue);
+            }
+
+            this._inputString = response.data?.[this.textProp];
+            this.searchInput.value = response.data?.[this.textProp];
+
+            return response.data;
+          } catch (error) {
+            console.error(error);
+            return;
+          }
+        }, 200);
+      } else {
+        console.error(error);
+        return;
+      }
+    }
+  }
+
   /*
    * Called when initialId prop changes
    * Sets searchInput value accordingly
    */
   async _initialIdChanged () {
     if (this.initialId !== undefined) {
-      if (this._lazyload) {
-        let completeUrl = '';
-        try {
-          await this.updateComplete;
-
-          const resourceName = this.lazyLoadResource.split('?')[0];
-          const resourceParameters = this.lazyLoadResource.split('?')[1];
-
-          completeUrl = `${resourceName}/${this.initialId}${resourceParameters ? `?${resourceParameters}` : ''}`;
-
-          const response = await this.socket.jget(completeUrl, 3000);
-
-          this._inputString = response.data?.[this.textProp];
-          this.searchInput.value = response.data?.[this.textProp];
-
-          if (this.resourceFormatter) {
-            this.resourceFormatter.call(this.page || {}, response.data,  response.included, this._searchValue);
-          }
-
-          this.setValue(this.initialId, response.data);
-        } catch (error) {
-          // TODO solve issue with socket 2 connecting state
-          if (error.code == 11) {
-            setTimeout(async () => {
-              try {
-                const response = await this.socket.jget(completeUrl, 3000);
-
-                this._inputString = response.data?.[this.textProp];
-                this.searchInput.value = response.data?.[this.textProp];
-
-                if (this.resourceFormatter) {
-                  this.resourceFormatter.call(this.page || {}, response.data,  response.included, this._searchValue);
-                }
-
-                this.setValue(this.initialId, response.data);
-              } catch (error) {
-                console.error(error);
-                return;
-              }
-            }, 200);
-          } else {
-            console.error(error);
-            return;
-          }
-        }
-      } else {
-        this.setValue(this.initialId);
-
-        for (let idx = 0; idx < this.items.length; idx++) {
-          if (this.items[idx].id === this.initialId) {
-            this._initialIdx = idx;
-            this._inputString = this.items[idx][this.textProp];
-            this.searchInput.value = this.items[idx][this.textProp];
-            break;
-          }
-        }
-      }
+      await this.setValue(this.initialId);
     }
   }
 
@@ -1124,7 +1116,7 @@ class CasperSelectLit extends LitElement {
     // Reset Width
     this._popover.resetMinWidth = true;
 
-    if (this.value && !this._lazyload && this._searchValue === undefined) {
+    if (this.value && !this._lazyload && !this.oldLazyLoad && this._searchValue === undefined) {
       this.setValue(this.value, null, true);
     }
   }
@@ -1202,7 +1194,14 @@ class CasperSelectLit extends LitElement {
       return;
     }
 
-    const socketResponse = await this.socket.jget(this._loadMoreItemsUrl(pageToLoad), 5000);
+    let socketResponse;
+    try {
+      socketResponse = await this.socket.jget(this._loadMoreItemsUrl(pageToLoad), 5000);
+    } catch (error) {
+      console.error(error);
+      this._resolveItemsFilteredPromise();
+      return;
+    }
 
     this._loadedPages.add(pageToLoad);
 
@@ -1210,25 +1209,16 @@ class CasperSelectLit extends LitElement {
     this.loading = false;
 
     // Calculate the total number of existing pages.
-    this._dataLength = parseInt(socketResponse.meta.total);
+    this._dataLength = parseInt(socketResponse.meta?.total);
 
     // Fetch the relationships data which falls under the 'included' key.
     const includedData = socketResponse.included ? socketResponse.included : null;
-    const resultsIncludedData = {};
-    if (includedData && includedData.length > 0) {
-      includedData.forEach(included => {
-        if (!resultsIncludedData[included.type]) {
-          resultsIncludedData[included.type] = {};
-        }
-        resultsIncludedData[included.type][included.id] = included;
-      });
-    }
 
     // Either replace the all items list if it was triggered by a search or append if it's a scroll event.
     const currentItems = this.items || [];
-    const formattedResultItems = !this.resourceFormatter
-      ? socketResponse.data
-      : socketResponse.data.map(item => this.resourceFormatter(item, resultsIncludedData));
+    
+    const formattedResultItems = socketResponse.data
+    formattedResultItems.forEach(item => { if (this.resourceFormatter) { this.resourceFormatter.call(this.page || {}, item, includedData, this._searchValue); }});
 
     const resultItems = triggeredFromSearch
       ? formattedResultItems
