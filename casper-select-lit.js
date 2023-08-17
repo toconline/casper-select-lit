@@ -478,13 +478,13 @@ class CasperSelectLit extends LitElement {
    * Sets a new value
    */
   async setValue (id, item, force = false) {
-    if (id !== this.value || force) {
+    if (id != this.value || force) {
       this.value = id;
       this._cvs.selectedItem = this.value;
 
       if (this.items && this.items.length > 0) {
         for (let idx = 0; idx < this.items.length; idx++) {
-          if (this.items[idx].id === this.value) {
+          if (this.items[idx].id == this.value) {
             this._initialIdx = idx;
             this._inputString = this.items[idx][this.textProp];
             this.searchInput.value = this.items[idx][this.textProp];
