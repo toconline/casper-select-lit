@@ -331,9 +331,11 @@ class CasperSelectLit extends LitElement {
    */
   firstUpdated () {
     this.socket = this.socket || window.app?.socket2;
-    this.searchInput = this.customInput || this.shadowRoot.getElementById('cs-input');
     this._cvs = this.shadowRoot.getElementById('cvs');
 
+    document.body.appendChild(this._cvs); // TODO review
+
+    this._setupSearchInput();
     this._setupPopover();
 
     (this.lazyLoadResource && !this.oldLazyLoad) ? this._lazyload = true : this._lazyload = false;
@@ -380,31 +382,11 @@ class CasperSelectLit extends LitElement {
       // this._dataLength = this.items.length;
     }
 
-    this.searchInput.addEventListener('input', this._userInput.bind(this));
     this._cvs.addEventListener('cvs-line-selected', (event) => {
       if (event && event.detail) {
         this._inputString = event.detail.name;
         this.setValue(event.detail.id, event.detail.item);
       }
-    });
-
-    this.searchInput.addEventListener('keydown', async (event) => {
-
-      // Avoid messing with the input cursor
-      switch (event.key) {
-        case 'ArrowUp':
-          event.preventDefault();
-          break;
-        case 'ArrowDown':
-          event.preventDefault();
-          break;
-      }
-
-      if ( this.autoOpen ) {
-        await this.showPopover();
-      }
-      // Forward event to cvs
-      this._cvs.dispatchEvent(new KeyboardEvent('keydown', {key: event.key}));
     });
   }
 
@@ -424,9 +406,11 @@ class CasperSelectLit extends LitElement {
   updated (changedProperties) {
     if (changedProperties.has('fitInto')) {
       // Fit into has changed, update popover
-      this._popover.fitInto = this.fitInto;
-      this._popover.maxWidth = (this.listMaxWidth || this.fitInto.getBoundingClientRect().width);
-      this._popover.resetOpts();
+      if (this._popover) {
+        this._popover.fitInto = this.fitInto;
+        this._popover.maxWidth = (this.listMaxWidth || this.fitInto.getBoundingClientRect().width);
+        this._popover.resetOpts();
+      }
     }
 
     if (changedProperties.has('initialId')) {
@@ -443,6 +427,10 @@ class CasperSelectLit extends LitElement {
 
     if (changedProperties.has('disabled')) {
       this.searchInput.disabled = this.disabled;
+    }
+
+    if (changedProperties.has('customInput')) {
+      this._setupSearchInput();
     }
   }
 
@@ -920,6 +908,29 @@ class CasperSelectLit extends LitElement {
     await this._cvs.initialSetup();
   }
 
+  _setupSearchInput () {
+    this.searchInput = this.customInput || this.shadowRoot.getElementById('cs-input');
+    this.searchInput.addEventListener('input', this._userInput.bind(this));
+    this.searchInput.addEventListener('keydown', async (event) => {
+      // Avoid messing with the input cursor
+      switch (event.key) {
+        case 'ArrowUp':
+          event.preventDefault();
+          break;
+        case 'ArrowDown':
+          event.preventDefault();
+          break;
+      }
+      if ( this.autoOpen ) {
+        await this.showPopover();
+      }
+      // Forward event to cvs
+      this._cvs.dispatchEvent(new KeyboardEvent('keydown', {key: event.key}));
+    });
+
+    // this.searchInput.insertAdjacentElement("afterend", this._cvs);
+  }
+
   /*
    * Setup the popover that contains the scroller
    */
@@ -932,7 +943,8 @@ class CasperSelectLit extends LitElement {
                                                {
                                                  minWidth: this.listMinWidth,
                                                  maxWidth: this.listMaxWidth,
-                                                 minHeight: this.listMinHeight
+                                                 minHeight: this.listMinHeight,
+                                                 handleEvents: !this.customInput // TODO review
                                                });
 
     this._popover.flipped = (placement) => {
@@ -1114,7 +1126,7 @@ class CasperSelectLit extends LitElement {
 
   _itemsChanged () {
     // Reset Width
-    this._popover.resetMinWidth = true;
+    if (this._popover) this._popover.resetMinWidth = true;
 
     if (this.value && !this._lazyload && !this.oldLazyLoad && this._searchValue === undefined) {
       this.setValue(this.value, null, true);

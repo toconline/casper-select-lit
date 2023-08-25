@@ -32,9 +32,9 @@
     lit "^2.x"
 
 "@cloudware-casper/casper-virtual-scroller@^0.x":
-  version "0.1.0"
-  resolved "https://npm.pkg.github.com/download/@cloudware-casper/casper-virtual-scroller/0.1.0/886b92f15d636c7b8610410b4a21d8f4db40a22a#886b92f15d636c7b8610410b4a21d8f4db40a22a"
-  integrity sha512-zwLoYtWkqOHY887tDhzdopP6QxXVXvNysh+q3A+Xb05w9ySKIrg7GaSs4cPnKrBZs+fj2JJQbVtHwE8rvJI1kQ==
+  version "0.1.1"
+  resolved "https://npm.pkg.github.com/download/@cloudware-casper/casper-virtual-scroller/0.1.1/bf48b62aca600f2db9817a280f71eee2fe3251bc#bf48b62aca600f2db9817a280f71eee2fe3251bc"
+  integrity sha512-JN8kPGfRxSZ2Nh+pWjttYACz3YyBHazEAxV9ieqxTl8JDRE6622Xq0O9GdJ8jW0/O3kIJ+HwyG4BGPWyYTuNpA==
   dependencies:
     lit "^2.x"
     wc-spinners "^1.1.1"
@@ -149,9 +149,9 @@
     "@webcomponents/shadycss" "^1.9.1"
 
 "@popperjs/core@^2.x":
-  version "2.11.5"
-  resolved "https://registry.yarnpkg.com/@popperjs/core/-/core-2.11.5.tgz#db5a11bf66bdab39569719555b0f76e138d7bd64"
-  integrity sha512-9X2obfABZuDVLCgPK9aX0a/x4jaOEweTTWE2+9sr0Qqqevj2Uv5XorvusThmc9XGYpS9yI+fhh8RTafBtGposw==
+  version "2.11.8"
+  resolved "https://registry.yarnpkg.com/@popperjs/core/-/core-2.11.8.tgz#6b79032e760a0899cd4204710beede972a3a185f"
+  integrity sha512-P1st0aksCrn9sGZhp8GMYwBnQsbvAWsZAX44oXNNvLHGqAOcoVxmjZiohstwQ7SqKnbR47akdNi+uleWD8+g6A==
 
 "@rollup/plugin-node-resolve@^11.0.1":
   version "11.2.1"
