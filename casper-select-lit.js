@@ -432,6 +432,15 @@ class CasperSelectLit extends LitElement {
     if (changedProperties.has('customInput')) {
       this._setupSearchInput();
     }
+
+    if (changedProperties.has('lazyLoadResource')) {
+      (this.lazyLoadResource && !this.oldLazyLoad) ? this._lazyload = true : this._lazyload = false;
+      if (this._lazyload) {
+        this._setupLazyLoad();
+      } else if (this.oldLazyLoad) {
+        this._setupOldLazyLoad();
+      }
+    }
   }
 
   //***************************************************************************************//
@@ -488,14 +497,17 @@ class CasperSelectLit extends LitElement {
 
       this.error = undefined;
       if (this.searchInput.invalid) this.searchInput.invalid = false;
-      this.dispatchEvent(new CustomEvent('change', {
-        detail: {
-          value: id,
-          item: item
-        },
-        bubbles: true,
-        composed: true
-      }));
+
+      if (force === false) {
+        this.dispatchEvent(new CustomEvent('change', {
+          detail: {
+            value: id,
+            item: item
+          },
+          bubbles: true,
+          composed: true
+        }));
+      }
     }
 
     this.hidePopover();
