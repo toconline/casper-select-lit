@@ -1143,7 +1143,7 @@ class CasperSelectLit extends LitElement {
    */
   async _initialIdChanged () {
     if (this.initialId !== undefined && this.initialId !== null && this.initialId !== '') {
-      await this.setValue(this.initialId);
+      await this.setValue(this.initialId, null, true);
     } else {
       this._initialIdx = 0;
     }
