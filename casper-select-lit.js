@@ -345,42 +345,30 @@ class CasperSelectLit extends LitElement {
     } else if (this.oldLazyLoad) {
       this._setupOldLazyLoad();
     } else {
-      if (!this.items || this.items.length === 0) {
-        // If we don't have items and we are not lazyloading use classic HTML options
-        const options = this.querySelectorAll('option');
-        let tmpItems = [];
-        if (options.length > 0) {
-          options.forEach(item => {
-            if (item.value && item.innerText) {
-              tmpItems.push({id: item.value, name: item.innerText});
-            }
-          });
-        }
-        this.items = tmpItems;
-      } else if (this.items.length > 0 && typeof this.items[0] !== 'object') {
-        // If we are not using an array of objects use simple array with item index as id
-        for (let idx = 0; idx < this.items.length; idx++) {
-          const item = this.items[idx];
-          this.items[idx] = {id: idx+1, name: item};
-        }
-      }
-
-      this._debouncedFilter = this._debounce(async () => {
-        // Normal filtering
-        this._resetData = false; // Bypass data reset
-        this.items = this._searchValue
-          ? this._initialItems.filter(item => !item.separator && this._includesNormalized(item[this.textProp],this._searchValue))
-          : JSON.parse(JSON.stringify(this._initialItems));
-
-        if (this.acceptUnlistedValue) this._setUnlistedValue();
-
-        // this._dataLength = this.items.length;
-        await this._updateScroller();
-        this._resolveItemsFilteredPromise();
-      }, 250);
-
-      // this._dataLength = this.items.length;
+      this._setupNonLazyLoad();
     }
+
+    this._cvs.addEventListener('cvs-request-items', async (event) => {
+      if (this._lazyload) {
+        const dir = event.detail.direction;
+        const index = event.detail.index;
+        if (!this._requested) {
+          this._requested = true;
+          await this._fetchItems(dir, index);
+          this._updateScroller();
+        } else {
+          this._requestQueue = {dir: dir, index: index};
+        }
+      } else if (this.oldLazyLoad) {
+        if (!this._requested && event.detail.direction !== 'up') {
+          this._requested = true;
+          await this._loadMoreItems('scroll', event.detail.index);
+          this._updateScroller();
+        }
+      } else {
+        // Ignore this event when not lazyloading
+      }
+    });
 
     this._cvs.addEventListener('cvs-line-selected', (event) => {
       if (event && event.detail) {
@@ -432,20 +420,35 @@ class CasperSelectLit extends LitElement {
     if (changedProperties.has('customInput')) {
       this._setupSearchInput();
     }
-
-    if (changedProperties.has('lazyLoadResource')) {
-      (this.lazyLoadResource && !this.oldLazyLoad) ? this._lazyload = true : this._lazyload = false;
-      if (this._lazyload) {
-        this._setupLazyLoad();
-      } else if (this.oldLazyLoad) {
-        this._setupOldLazyLoad();
-      }
-    }
   }
 
   //***************************************************************************************//
   //                               ~~~ Public functions~~~                                 //
   //***************************************************************************************//
+
+  reset () {
+    if (this._popover) {
+      this._popover.resetMinWidth = true;
+      this._popover.clear();
+    }
+
+    this._setupPopover();
+
+    (this.lazyLoadResource && !this.oldLazyLoad) ? this._lazyload = true : this._lazyload = false;
+    this._searchValue = ''; // reset search
+    this._dataReady = false; // reset data
+
+    if (this._lazyload) {
+      this._dataLength = null;
+      this._setupLazyLoad();
+    } else if (this.oldLazyLoad) {
+      this._dataLength = null;
+      this._setupOldLazyLoad();
+    } else {
+      this._dataLength = this.items.length;
+      this._setupNonLazyLoad();
+    }
+  }
 
   /*
    * Clears the input
@@ -1035,25 +1038,9 @@ class CasperSelectLit extends LitElement {
    */
   async _setupLazyLoad () {
     this._originalResource = this.lazyLoadResource;
-
     this._debouncedFilter = this._debounce(() => {
       this._filterLazyLoad();
     }, 250);
-
-    this._cvs.addEventListener('cvs-request-items', async (event) => {
-      const dir = event.detail.direction;
-      const index = event.detail.index;
-
-      // console.log(`%c Received request ${dir} -> ${index}`, 'background: white; color: blue');
-      if (!this._requested) {
-        this._requested = true;
-        await this._fetchItems(dir, index);
-        this._updateScroller();
-      } else {
-        this._requestQueue = {dir: dir, index: index};
-      }
-    });
-
     this._requested = false;
     this._requestQueue = undefined;
   }
@@ -1064,20 +1051,44 @@ class CasperSelectLit extends LitElement {
    */
   async _setupOldLazyLoad () {
     this._loadedPages = new Set();
-
     this._debouncedFilter = this._debounce(() => {
       this._loadMoreItems();
     }, 250);
-
-    this._cvs.addEventListener('cvs-request-items', async (event) => {
-      if (!this._requested && event.detail.direction !== 'up') {
-        this._requested = true;
-        console.log('requesting scroll items!');
-        await this._loadMoreItems('scroll', event.detail.index);
-        this._updateScroller();
-      }
-    });
     this._requested = false;
+  }
+
+  async _setupNonLazyLoad () {
+    if (!this.items || this.items.length === 0) {
+      // If we don't have items and we are not lazyloading use classic HTML options
+      const options = this.querySelectorAll('option');
+      let tmpItems = [];
+      if (options.length > 0) {
+        options.forEach(item => {
+          if (item.value && item.innerText) {
+            tmpItems.push({id: item.value, name: item.innerText});
+          }
+        });
+      }
+      this.items = tmpItems;
+    } else if (this.items.length > 0 && typeof this.items[0] !== 'object') {
+      // If we are not using an array of objects use simple array with item index as id
+      for (let idx = 0; idx < this.items.length; idx++) {
+        const item = this.items[idx];
+        this.items[idx] = {id: idx+1, name: item};
+      }
+    }
+
+    this._debouncedFilter = this._debounce(async () => {
+      // Normal filtering
+      this._resetData = false; // Bypass data reset
+      this.items = this._searchValue
+        ? this._initialItems.filter(item => !item.separator && this._includesNormalized(item[this.textProp],this._searchValue))
+        : JSON.parse(JSON.stringify(this._initialItems));
+
+      if (this.acceptUnlistedValue) this._setUnlistedValue();
+      await this._updateScroller();
+      this._resolveItemsFilteredPromise();
+    }, 250);
   }
 
   async _setSingleItem (id) {
@@ -1131,8 +1142,10 @@ class CasperSelectLit extends LitElement {
    * Sets searchInput value accordingly
    */
   async _initialIdChanged () {
-    if (this.initialId !== undefined) {
+    if (this.initialId !== undefined && this.initialId !== null && this.initialId !== '') {
       await this.setValue(this.initialId);
+    } else {
+      this._initialIdx = 0;
     }
   }
 
