@@ -958,8 +958,7 @@ class CasperSelectLit extends LitElement {
                                                {
                                                  minWidth: this.listMinWidth,
                                                  maxWidth: this.listMaxWidth,
-                                                 minHeight: this.listMinHeight,
-                                                 handleEvents: !this.customInput // TODO review
+                                                 minHeight: this.listMinHeight
                                                });
 
     this._popover.flipped = (placement) => {

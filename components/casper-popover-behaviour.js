@@ -14,7 +14,6 @@ export default class CasperPopoverBehaviour {
     this.element       = element;
     this.fitInto       = (fitInto || target.parentElement);
     this.resetMinWidth = false;
-    this.handleEvents  = true;
 
     this.padding   = customOpts.padding   || 10;
     this.placement = customOpts.placement || 'bottom';
@@ -23,33 +22,28 @@ export default class CasperPopoverBehaviour {
     this.minHeight = customOpts.minHeight || 100;
     this.maxWidth  = customOpts.maxWidth  || this.fitInto.getBoundingClientRect().width;
     this.maxHeight = customOpts.maxHeight;
-    
-    if (customOpts.handleEvents !== undefined) this.handleEvents = customOpts.handleEvents;
 
     this.initialMinWidth = this.minWidth;
 
     this._opts = this.getPopperOpts();
     this.popperInstance = createPopper(this.target, this.element, this._opts);
 
-    if (this.handleEvents) {
-      this._eventCloseFunc = (event) => {
-        if (event.composedPath().includes(this.target) && !this.open) {
-          this.show();
-        } else if (!event.composedPath().includes(this.element)) {
-          this.hide();
-        }
-      };
-      this._eventCloseFunc = this._eventCloseFunc.bind(this);
-      document.addEventListener("click", this._eventCloseFunc);
-      this._closeOnEsc = (event) => {
-        if (event && event.key === 'Escape') {
-          this.hide();
-        }
-      };
-      this._closeOnEsc = this._closeOnEsc.bind(this);
-      document.addEventListener("keydown", this._closeOnEsc);
-    }
-
+    this._eventCloseFunc = (event) => {
+      if (event.composedPath().includes(this.target) && !this.open) {
+        this.show();
+      } else if (!event.composedPath().includes(this.element)) {
+        this.hide();
+      }
+    };
+    this._eventCloseFunc = this._eventCloseFunc.bind(this);
+    document.addEventListener("click", this._eventCloseFunc);
+    this._closeOnEsc = (event) => {
+      if (event && event.key === 'Escape') {
+        this.hide();
+      }
+    };
+    this._closeOnEsc = this._closeOnEsc.bind(this);
+    document.addEventListener("keydown", this._closeOnEsc);
 
     this._preventIronOverlayCanceled = (event) => {event.preventDefault()};
     this.element.style.display = 'none';
@@ -57,10 +51,8 @@ export default class CasperPopoverBehaviour {
 
   clear () {
     this.popperInstance.destroy();
-    if (this.handleEvents) {
-      document.removeEventListener("click", this._eventCloseFunc);
-      document.removeEventListener("keydown", this._closeOnEsc);
-    }
+    document.removeEventListener("click", this._eventCloseFunc);
+    document.removeEventListener("keydown", this._closeOnEsc);
   }
 
   getPopperOpts () {
