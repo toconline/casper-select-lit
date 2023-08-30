@@ -440,7 +440,6 @@ class CasperSelectLit extends LitElement {
     (this.lazyLoadResource && !this.oldLazyLoad) ? this._lazyload = true : this._lazyload = false;
     this._searchValue = ''; // reset search
     this._dataReady = false; // reset data
-    this.renderLine = undefined; // reset render line
 
     if (this._lazyload) {
       this._dataLength = null;
