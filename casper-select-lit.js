@@ -183,6 +183,9 @@ class CasperSelectLit extends LitElement {
       oldLazyLoadPageSize: {
         type: Number
       },
+      filterFields: {
+        type: Array
+      },
       _unlistedItem: {
         type: Object,
         attribute: false
@@ -437,6 +440,7 @@ class CasperSelectLit extends LitElement {
     (this.lazyLoadResource && !this.oldLazyLoad) ? this._lazyload = true : this._lazyload = false;
     this._searchValue = ''; // reset search
     this._dataReady = false; // reset data
+    this.renderLine = undefined; // reset render line
 
     if (this._lazyload) {
       this._dataLength = null;
@@ -1081,7 +1085,7 @@ class CasperSelectLit extends LitElement {
       // Normal filtering
       this._resetData = false; // Bypass data reset
       this.items = this._searchValue
-        ? this._initialItems.filter(item => !item.separator && this._includesNormalized(item[this.textProp],this._searchValue))
+        ? this._initialItems.filter(item => !item.separator && this._includesNormalized(this.filterFields || item[this.textProp],this._searchValue))
         : JSON.parse(JSON.stringify(this._initialItems));
 
       if (this.acceptUnlistedValue) this._setUnlistedValue();
@@ -1186,7 +1190,14 @@ class CasperSelectLit extends LitElement {
   }
 
   _includesNormalized (value, search) {
-    return (this._normalizeValue(value)).match(new RegExp(this._normalizeValue(search, true), 'i'));
+    if (Array.isArray(value)) {
+      value.forEach(e => {
+        if ((this._normalizeValue(e)).match(new RegExp(this._normalizeValue(search, true), 'i'))) return true;
+      });
+      return false;
+    } else {
+      return (this._normalizeValue(value)).match(new RegExp(this._normalizeValue(search, true), 'i'));
+    }
   }
 
 
