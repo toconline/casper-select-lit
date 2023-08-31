@@ -558,6 +558,14 @@ class CasperSelectLit extends LitElement {
     }
   }
 
+  moveSelectionUp () {
+    this._cvs.moveSelection('up');
+  }
+
+  moveSelectionDown () {
+    this._cvs.moveSelection('down');
+  }
+
   //***************************************************************************************//
   //                              ~~~ Private functions~~~                                 //
   //***************************************************************************************//
