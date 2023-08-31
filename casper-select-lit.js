@@ -1084,7 +1084,7 @@ class CasperSelectLit extends LitElement {
       // Normal filtering
       this._resetData = false; // Bypass data reset
       this.items = this._searchValue
-        ? this._initialItems.filter(item => !item.separator && this._includesNormalized(this.filterFields || item[this.textProp],this._searchValue))
+        ? this._initialItems.filter(item => !item.separator && this._includesNormalized(this.filterFields || this.textProp, item, this._searchValue))
         : JSON.parse(JSON.stringify(this._initialItems));
 
       if (this.acceptUnlistedValue) this._setUnlistedValue();
@@ -1188,14 +1188,15 @@ class CasperSelectLit extends LitElement {
     return normalizedValue
   }
 
-  _includesNormalized (value, search) {
-    if (Array.isArray(value)) {
-      value.forEach(e => {
-        if ((this._normalizeValue(e)).match(new RegExp(this._normalizeValue(search, true), 'i'))) return true;
+  _includesNormalized (attribute, item, search) {
+    if (Array.isArray(attribute)) {
+      let found = false;
+      attribute.forEach(e => {
+        if ((this._normalizeValue(item[e])).match(new RegExp(this._normalizeValue(search, true), 'i'))) found = true;
       });
-      return false;
+      return found;
     } else {
-      return (this._normalizeValue(value)).match(new RegExp(this._normalizeValue(search, true), 'i'));
+      return (this._normalizeValue(item[attribute])).match(new RegExp(this._normalizeValue(search, true), 'i'));
     }
   }
 
