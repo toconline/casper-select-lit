@@ -551,6 +551,13 @@ class CasperSelectLit extends LitElement {
     await this._popover.show();
   }
 
+  async setSearchValue (value) {
+    if (value !== undefined && value !== null) {
+      await this._setupData();
+      this._searchValue = value;
+    }
+  }
+
   //***************************************************************************************//
   //                              ~~~ Private functions~~~                                 //
   //***************************************************************************************//
@@ -871,6 +878,7 @@ class CasperSelectLit extends LitElement {
   }
 
   async _setupData () {
+    if (this._dataReady) return;
     if (this._lazyload) {
       this.loading = true;
       this.requestUpdate();
@@ -924,6 +932,8 @@ class CasperSelectLit extends LitElement {
 
     // Since we are delaying the cvs setup we have to do it manually
     await this._cvs.initialSetup();
+
+    this._dataReady = true;
   }
 
   _setupSearchInput () {
@@ -980,24 +990,19 @@ class CasperSelectLit extends LitElement {
       this._popover.minWidth = (this.listMinWidth || this.searchInput.getBoundingClientRect().width);
       this._popover.initialMinWidth = this._popover.minWidth;
 
-      if (!this._dataReady) {
-        // First time opening the popover setup data
-        await this._setupData();
-        this._dataReady = true;
-      } else {
-        if (this.value) {
-          if (this._lazyload) {
-            if (!this._searchValue) {
-              // We need to ask the socket for the index because we might not have the item in memory
-              const valueIndex = await this._getIndexForId(this.value);
-              if (valueIndex > -1) this._cvs.scrollToIndex(valueIndex);
-            }
-
-          } else {
-            // If we are not lazyloading we should have the item in memory
-            this._cvs.selectedItem = this.value;
-            this._cvs.scrollToId(this.value);
+      await this._setupData();
+      if (this.value) {
+        if (this._lazyload) {
+          if (!this._searchValue) {
+            // We need to ask the socket for the index because we might not have the item in memory
+            const valueIndex = await this._getIndexForId(this.value);
+            if (valueIndex > -1) this._cvs.scrollToIndex(valueIndex);
           }
+
+        } else {
+          // If we are not lazyloading we should have the item in memory
+          this._cvs.selectedItem = this.value;
+          this._cvs.scrollToId(this.value);
         }
       }
       await this._updateScroller();
@@ -1183,6 +1188,7 @@ class CasperSelectLit extends LitElement {
   }
 
   _normalizeValue (value, escape=false) {
+    if (value === undefined || value === null) return;
     let normalizedValue = value.normalize('NFD').replace(/[\u0300-\u036f]/g, "");
     if (escape) normalizedValue = normalizedValue.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     return normalizedValue
