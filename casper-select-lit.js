@@ -192,6 +192,9 @@ class CasperSelectLit extends LitElement {
       ignoreInputEvent: {
         type: Boolean
       },
+      popoverSettings: {
+        type: Object
+      },
       _unlistedItem: {
         type: Object,
         attribute: false
@@ -985,14 +988,18 @@ class CasperSelectLit extends LitElement {
   _setupPopover () {
     this.fitInto = this.fitInto || document.documentElement;
 
+    if (!this.popoverSettings) {
+      this.popoverSettings = {
+        minWidth: this.listMinWidth,
+        maxWidth: this.listMaxWidth || this.fitInto?.getBoundingClientRect()?.width,
+        minHeight: this.listMinHeight
+      }
+    }
+
     this._popover = new CasperPopoverBehaviour(this.searchInput,
                                                this._cvs,
                                                this.fitInto,
-                                               {
-                                                 minWidth: this.listMinWidth,
-                                                 maxWidth: this.listMaxWidth,
-                                                 minHeight: this.listMinHeight
-                                               });
+                                               this.popoverSettings);
 
     this._popover.flipped = (placement) => {
       // Callback when popover changes from below the input to above the input
@@ -1200,11 +1207,15 @@ class CasperSelectLit extends LitElement {
 
   async _updateScroller () {
     // console.log('-- Updating Scroller --');
+    this._cvs.refreshHeight();
     this.requestUpdate();
     await this.updateComplete;
     this._cvs.requestUpdate();
-    await this._cvs.updateComplete;
-    await this._popover.update();
+    await this.updateComplete;
+    setTimeout(() => {
+      //This works with timeout.. why?
+      this._popover.update();
+    }, 10);
   }
 
   _normalizeValue (value, escape=false) {

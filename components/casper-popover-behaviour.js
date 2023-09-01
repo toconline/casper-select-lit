@@ -15,7 +15,7 @@ export default class CasperPopoverBehaviour {
     this.fitInto       = (fitInto || target.parentElement);
     this.resetMinWidth = false;
 
-    this.padding   = customOpts.padding   || 10;
+    this.padding   = customOpts.padding   ?? 10;
     this.placement = customOpts.placement || 'bottom';
     this.strategy  = customOpts.strategy  || 'fixed';
     this.minWidth  = customOpts.minWidth  || this.target.getBoundingClientRect().width || 100;
