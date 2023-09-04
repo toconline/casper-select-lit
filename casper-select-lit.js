@@ -1221,7 +1221,7 @@ class CasperSelectLit extends LitElement {
 
   _normalizeValue (value, escape=false) {
     if (value === undefined || value === null) return;
-    let normalizedValue = value.normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+    let normalizedValue = (String(value)).normalize('NFD').replace(/[\u0300-\u036f]/g, "");
     if (escape) normalizedValue = normalizedValue.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     return normalizedValue
   }
