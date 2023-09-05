@@ -92,6 +92,9 @@ class CasperSelectLit extends LitElement {
       dataSize: {
         type: Number
       },
+      idProp: {
+        type: String
+      },
       textProp: {
         type: String
       },
@@ -325,6 +328,7 @@ class CasperSelectLit extends LitElement {
         .items="${this.items}"
         .height="${this.listHeight}"
         ?loading="${this.loading}"
+        .idProp="${this.idProp}"
         .lineCss="${this.lineCss}"
         .textProp="${this.textProp}"
         .dataSize="${this._dataLength}"
