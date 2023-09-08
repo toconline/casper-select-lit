@@ -39,7 +39,7 @@ class CasperHighlightable extends LitElement {
 
   firstUpdated () {
     this._firstRender = false;
-    this._originalText = this.innerText;
+    this._originalText = this.textContent;
     this.requestUpdate();
   }
 
