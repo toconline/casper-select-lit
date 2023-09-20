@@ -6,7 +6,7 @@ import './components/casper-highlightable.js';
 
 import CasperPopoverBehaviour from './components/casper-popover-behaviour.js';
 
-class CasperSelectLit extends LitElement {
+export class CasperSelectLit extends LitElement {
   static styles = css`
     :host {
       --cs-font-size: 1rem;
@@ -266,6 +266,7 @@ class CasperSelectLit extends LitElement {
     super();
 
     this.idColumn             = 'id';
+    this.idProp               = 'id';
     this.tableSchema          = 'sharded';
     this.textProp             = 'name';
     this.extraColumn          = 'NULL'
@@ -388,12 +389,9 @@ class CasperSelectLit extends LitElement {
       }
     });
 
-    this._cvs.addEventListener('cvs-line-selected', (event) => {
-      if (event && event.detail) {
-        this._inputString = event.detail.name;
-        this.setValue(event.detail.id, event.detail.item);
-      }
-    });
+    this.searchInput.addEventListener('input', this._userInput.bind(this));
+
+    this._cvs.addEventListener('cvs-line-selected', this._selectLine.bind(this));
   }
 
   willUpdate (changedProperties) {
@@ -502,7 +500,7 @@ class CasperSelectLit extends LitElement {
 
       if (this.items && this.items.length > 0) {
         for (let idx = 0; idx < this.items.length; idx++) {
-          if (this.items[idx].id == this.value) {
+          if (this.items[idx][this.idProp] == this.value) {
             this._initialIdx = idx;
             this._inputString = this.items[idx][this.textProp];
             this.searchInput.value = this.items[idx][this.textProp];
@@ -510,7 +508,7 @@ class CasperSelectLit extends LitElement {
           }
         }
         // If we dont have an item try to look for it
-        !item ? item = this.items?.filter(it => it?.id == this.value)?.[0] : true;
+        !item ? item = this.items?.filter(it => it?.[this.idProp] == this.value)?.[0] : true;
       } else if (this._lazyload || this.oldLazyLoad) {
         // No items yet? fake it
         !item ? item = await this._setSingleItem(id) : true;
@@ -666,7 +664,7 @@ class CasperSelectLit extends LitElement {
     if (dir === 'up') {
       const requestPayload = {
                               idColumn: this.idColumn,
-                              activeId: +this.items[this.items.length-1].id,
+                              activeId: +this.items[this.items.length-1][this.idProp],
                               nrOfItems: this.dataSize,
                               activeIndex: Math.max(0, index-this.dataSize+1),
                               ratio: 1
@@ -689,7 +687,7 @@ class CasperSelectLit extends LitElement {
     } else if (dir === 'down' || dir === 'none') {
       const requestPayload = {
                               idColumn: this.idColumn,
-                              activeId: +this.items[this.items.length-1].id,
+                              activeId: +this.items[this.items.length-1][this.idProp],
                               nrOfItems: this.dataSize,
                               activeIndex: index,
                               ratio: 1
@@ -1049,13 +1047,13 @@ class CasperSelectLit extends LitElement {
       // When popover closes clear search input if no value
       if (this.value !== undefined) {
         if (this._lazyload) {
-          this.searchInput.value = this._freshItems.filter(e=>e.id == this.value)[0]?.[this.textProp];
+          this.searchInput.value = this._freshItems.filter(e=>e[this.idProp] == this.value)[0]?.[this.textProp];
           if (this.searchInput.value === undefined) this.searchInput.value = this._inputString;
         } else if (this.oldLazyLoad) {
-          this.searchInput.value = this.items.filter(e=>e.id == this.value)[0]?.[this.textProp];
+          this.searchInput.value = this.items.filter(e=>e[this.idProp] == this.value)[0]?.[this.textProp];
           if (this.searchInput.value === undefined) this.searchInput.value = this._inputString;
         } else {
-          this.searchInput.value = this._initialItems.filter(e=>e.id == this.value)[0]?.[this.textProp];
+          this.searchInput.value = this._initialItems.filter(e=>e[this.idProp] == this.value)[0]?.[this.textProp];
         }
         if (this.acceptUnlistedValue && this.searchInput.value === undefined) {
           this.searchInput.value = this.value
@@ -1197,12 +1195,19 @@ class CasperSelectLit extends LitElement {
     }
   }
 
+  _selectLine (event) {
+    if (event && event.detail) {
+      this._inputString = event.detail.name;
+      this.setValue(event.detail.id, event.detail.item);
+    }
+  }
+
   _setUnlistedValue () {
-    const searchMatchesId = this.items.filter(e => e.id === this._searchValue).length;
+    const searchMatchesId = this.items.filter(e => e[this.idProp] === this._searchValue).length;
 
     if (this._searchValue !== undefined && this._searchValue !== '' && !searchMatchesId) {
       const unlistedItem = {unlisted: true};
-      unlistedItem.id = this._searchValue;
+      unlistedItem[this.idProp] = this._searchValue;
       unlistedItem[this.textProp] = this._searchValue;
       this._unlistedItem = unlistedItem;
     } else {
