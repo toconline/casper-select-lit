@@ -96,6 +96,43 @@ class CasperMultiSelect extends CasperSelectLit {
     }
   }
 
+  /*
+   * Clears the input
+   */
+  async clearValue (event) {
+    this._cvs.selectedItems = [];
+    await super.clearValue();
+  }
+
+  /*
+   * Setup the popover that contains the scroller
+   */
+  _setupPopover () {
+    super._setupPopover();
+
+    // We only need to override open function
+    this._popover.opened = async () => {
+      // Callback when popover is opened
+      this._csInputIcon = 'cs__down-icon--rotate-up';
+
+      // When popover opens restore search value
+      this.searchInput.value = this._searchValue === undefined ? '' : this._searchValue;
+
+      // Reset minimum list width to be the same as the input width
+      // We wont have the final searchInput width in firstUpdated
+      this._popover.minWidth = (this.listMinWidth || this.searchInput.getBoundingClientRect().width);
+      this._popover.initialMinWidth = this._popover.minWidth;
+
+      await this._setupData();
+
+      await this._updateScroller();
+      this.dispatchEvent(new CustomEvent('popover-opened', {
+        bubbles: true,
+        composed: true
+      }));
+    };
+  }
+
   _selectLine (event) {
     if (event && event.detail) {
       if (this.value && this.value.split(this.valueSeparator).includes(event.detail.id)) {
