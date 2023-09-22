@@ -352,8 +352,6 @@ export class CasperSelectLit extends LitElement {
     this.socket = this.socket || window.app?.socket2;
     this._cvs = this.shadowRoot.getElementById('cvs');
 
-    document.body.appendChild(this._cvs); // TODO review
-
     this._setupSearchInput();
     this._setupPopover();
 
