@@ -6,6 +6,7 @@ class CasperMultiSelect extends CasperSelectLit {
     super();
 
     this.valueSeparator = ';';
+    this.okButtonLabel = 'Concluído';
   }
 
   render () {
@@ -33,11 +34,13 @@ class CasperMultiSelect extends CasperSelectLit {
         .dataSize="${this._dataLength}"
         .renderLine="${this._renderLine}"
         .startIndex="${this._initialIdx}"
-        .unlistedItem="${this._unlistedItem}"
         .unsafeRender="${this.unsafeRender}"
+        .unlistedItem="${this._unlistedItem}"
         .renderNoItems="${this._renderNoItems}"
         .renderSeparator="${this.renderSeparator}"
-        .renderPlaceholder="${this.renderPlaceholder}">
+        .renderPlaceholder="${this.renderPlaceholder}"
+        .okButtonHandler="${this._okButtonHandler.bind(this)}"
+        .okButtonLabel="${this.okButtonLabel}">
       </casper-virtual-scroller>
       ${this.error ? html`<p class="cs__error-label">${this.error}</p>` : ''}
     `;
@@ -142,6 +145,16 @@ class CasperMultiSelect extends CasperSelectLit {
       }
     }
   }
+
+  _okButtonHandler () {
+    this.dispatchEvent(new CustomEvent('ok-button-pressed', {
+      detail: {
+        value: this.value
+      },
+      bubbles: true,
+      composed: true
+    }));
+  } 
 
 }
 
