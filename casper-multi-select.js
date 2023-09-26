@@ -138,10 +138,10 @@ class CasperMultiSelect extends CasperSelectLit {
 
   _selectLine (event) {
     if (event && event.detail) {
-      if (this.value && this.value.split(this.valueSeparator).includes(event.detail.id)) {
-        this.removeValue(event.detail.id);
+      if (this.value && this.value.split(this.valueSeparator).includes(String(event.detail.id))) {
+        this.removeValue(String(event.detail.id));
       } else {
-        this.addValue(event.detail.id);
+        this.addValue(String(event.detail.id));
       }
     }
   }
