@@ -24,7 +24,7 @@ class CasperMultiSelect extends CasperSelectLit {
         id="cvs"
         part="virtual-scroller"
         delaySetup
-        multiSelect
+        multi-select
         .items="${this.items}"
         .height="${this.listHeight}"
         ?loading="${this.loading}"

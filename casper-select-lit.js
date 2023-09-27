@@ -577,6 +577,10 @@ export class CasperSelectLit extends LitElement {
     this._cvs.moveSelection('down');
   }
 
+  confirmSelection () {
+    this._cvs.confirmSelection();
+  }
+
   //***************************************************************************************//
   //                              ~~~ Private functions~~~                                 //
   //***************************************************************************************//
