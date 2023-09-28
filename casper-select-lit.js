@@ -1180,7 +1180,7 @@ export class CasperSelectLit extends LitElement {
    * Sets searchInput value accordingly
    */
   async _initialIdChanged () {
-    if (this.initialId !== undefined && this.initialId !== null && this.initialId !== '') {
+    if (this.initialId !== undefined && this.initialId !== null && this.initialId !== "null" && this.initialId !== '') {
       await this.setValue(this.initialId, null, true);
     } else {
       this._initialIdx = 0;
