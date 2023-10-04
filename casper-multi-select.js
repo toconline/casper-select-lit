@@ -51,7 +51,7 @@ class CasperMultiSelect extends CasperSelectLit {
    */
   async addValue (id) {
     if (this.value) {
-      await this.setValue(`${this.value};${id}`);
+      await this.setValue(`${this.value}${this.valueSeparator} ${id}`);
     } else {
       await this.setValue(id);
     }
@@ -113,7 +113,6 @@ class CasperMultiSelect extends CasperSelectLit {
   _setupPopover () {
     super._setupPopover();
 
-    // We only need to override open function
     this._popover.opened = async () => {
       // Callback when popover is opened
       this._csInputIcon = 'cs__down-icon--rotate-up';
@@ -130,6 +129,33 @@ class CasperMultiSelect extends CasperSelectLit {
 
       await this._updateScroller();
       this.dispatchEvent(new CustomEvent('popover-opened', {
+        bubbles: true,
+        composed: true
+      }));
+    };
+
+    this._popover.closed = () => {
+      // Callback when popover is closed
+      this._csInputIcon = '';
+
+      // When popover closes clear search input if no value
+      if (this.value !== undefined) {
+        if (this._lazyload) {
+          // TODO
+        } else if (this.oldLazyLoad) {
+          // TODO
+        } else {
+          const selectedTextItems = this.items.filter(e => this._cvs.selectedItems.includes(e[this.idProp])).map(e => e[this.textProp]);
+          this.searchInput.value = selectedTextItems.join(this.valueSeparator);
+        }
+        if (this.acceptUnlistedValue && this.searchInput.value === undefined) {
+          this.searchInput.value = this.value
+        }
+      } else {
+        this.searchInput.value = '';
+      }
+      this.requestUpdate();
+      this.dispatchEvent(new CustomEvent('popover-closed', {
         bubbles: true,
         composed: true
       }));
@@ -154,6 +180,7 @@ class CasperMultiSelect extends CasperSelectLit {
       bubbles: true,
       composed: true
     }));
+    this.hidePopover();
   } 
 
 }
