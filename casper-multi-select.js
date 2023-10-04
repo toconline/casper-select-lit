@@ -51,7 +51,7 @@ class CasperMultiSelect extends CasperSelectLit {
    */
   async addValue (id) {
     if (this.value) {
-      await this.setValue(`${this.value}${this.valueSeparator} ${id}`);
+      await this.setValue(`${this.value}${this.valueSeparator}${id}`);
     } else {
       await this.setValue(id);
     }
@@ -146,7 +146,7 @@ class CasperMultiSelect extends CasperSelectLit {
           // TODO
         } else {
           const selectedTextItems = this.items.filter(e => this._cvs.selectedItems.includes(e[this.idProp])).map(e => e[this.textProp]);
-          this.searchInput.value = selectedTextItems.join(this.valueSeparator);
+          this.searchInput.value = selectedTextItems.join(this.valueSeparator + ' ');
         }
         if (this.acceptUnlistedValue && this.searchInput.value === undefined) {
           this.searchInput.value = this.value
