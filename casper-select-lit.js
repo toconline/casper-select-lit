@@ -917,6 +917,7 @@ export class CasperSelectLit extends LitElement {
       if (subscribeResponse === false) {
         this.loading = false;
         await this._cvs.initialSetup();
+        this._dataReady = true;
         return;
       }
 
