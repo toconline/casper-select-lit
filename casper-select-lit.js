@@ -49,6 +49,7 @@ export class CasperSelectLit extends LitElement {
 
     #cvs {
       --cvs-font-size: calc(var(--cs-font-size) * 0.875);
+      --cvs-color: inherit;
     }
 
     .cs__error-label {
@@ -62,6 +63,10 @@ export class CasperSelectLit extends LitElement {
       margin: 0;
       padding: 0;
       margin-top: -5px;
+    }
+
+    :host([disabled]) .cs__error-label {
+      opacity: 0.33;
     }
   `;
 
