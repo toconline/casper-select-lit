@@ -307,9 +307,11 @@ export class CasperSelectLit extends LitElement {
     if (this._popover) {
       this._popover.clear();
     }
-    if (this.socket && this.socket.isOpen()) {
-      this.socket.unsubscribeAllLazyload(3000);
-    }
+
+    // TODO: we cant unsubscribe all lazyloads in case there is a wizard in moac relation
+    // if (this.socket && this.socket.isOpen()) {
+    //   this.socket.unsubscribeAllLazyload(3000);
+    // }
   }
 
   //***************************************************************************************//
