@@ -447,7 +447,7 @@ export class CasperSelectLit extends LitElement {
   //                               ~~~ Public functions~~~                                 //
   //***************************************************************************************//
 
-  reset () {
+  async reset () {
     if (this._popover) {
       this._popover.resetMinWidth = true;
       this._popover.clear();
@@ -461,13 +461,13 @@ export class CasperSelectLit extends LitElement {
 
     if (this._lazyload) {
       this._dataLength = null;
-      this._setupLazyLoad();
+      await this._setupLazyLoad();
     } else if (this.oldLazyLoad) {
       this._dataLength = null;
-      this._setupOldLazyLoad();
+      await this._setupOldLazyLoad();
     } else {
       this._dataLength = this.items.length;
-      this._setupNonLazyLoad();
+      await this._setupNonLazyLoad();
     }
   }
 
