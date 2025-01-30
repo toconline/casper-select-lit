@@ -17,8 +17,8 @@
 
 import { LitElement, html, css, unsafeCSS } from 'lit';
 import '@polymer/paper-input/paper-input.js';
-import '@cloudware-casper/casper-icons/casper-icon.js';
-import '@cloudware-casper/casper-virtual-scroller/casper-virtual-scroller.js';
+import '@toconline/casper-icons/casper-icon.js';
+import '@toconline/casper-virtual-scroller/casper-virtual-scroller.js';
 import './components/casper-highlightable.js';
 
 import CasperPopoverBehaviour from './components/casper-popover-behaviour.js';

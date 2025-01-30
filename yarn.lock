@@ -23,17 +23,17 @@
     chalk "^2.0.0"
     js-tokens "^4.0.0"
 
-"@cloudware-casper/casper-icons@^3.x":
+"@toconline/casper-icons@^3.x":
   version "3.2.4"
-  resolved "https://npm.pkg.github.com/download/@cloudware-casper/casper-icons/3.2.4/d452d083556f87141c6de429cf2967a260feb4b3bbc1b9b0a4ff3327eb9066d0#1e684cd3cd88096e0e54fbce5882fc0a7ca2ac31"
+  resolved "https://npm.pkg.github.com/download/@toconline/casper-icons/3.2.4/d452d083556f87141c6de429cf2967a260feb4b3bbc1b9b0a4ff3327eb9066d0#1e684cd3cd88096e0e54fbce5882fc0a7ca2ac31"
   integrity sha512-HqRsYQkX0CXQnRv3SPcWhchgJ4rX8PogfJ3JfMJyJ6d8p0Yz1u9az0VvTBU9W8qov3KfvIAHZmtSphq3UQKH2w==
   dependencies:
     ink-ripple alex-saunders/ink-ripple
     lit "^2.x"
 
-"@cloudware-casper/casper-virtual-scroller@^0.x":
+"@toconline/casper-virtual-scroller@^0.x":
   version "0.2.0"
-  resolved "https://npm.pkg.github.com/download/@cloudware-casper/casper-virtual-scroller/0.2.0/ecba2274e6021db82fd21adfda617b9cfe7b4279#ecba2274e6021db82fd21adfda617b9cfe7b4279"
+  resolved "https://npm.pkg.github.com/download/@toconline/casper-virtual-scroller/0.2.0/ecba2274e6021db82fd21adfda617b9cfe7b4279#ecba2274e6021db82fd21adfda617b9cfe7b4279"
   integrity sha512-yaT9u8pR3efQ3Judf7OoM6ffry/7v7+ecOzGeHu1AFpi605e/v/AQFIw/kPzLMdXTaXrsu4CaFM+0kzPsSdtsA==
   dependencies:
     lit "^2.x"

@@ -1,5 +1,5 @@
 {
-  "name": "@cloudware-casper/casper-select-lit",
+  "name": "@toconline/casper-select-lit",
   "main": "casper-select-lit.js",
   "version": "0.4.2",
   "description": "A casper-select made in lit",
@@ -11,8 +11,8 @@
     "start:watch": "web-dev-server --open demo/ --node-resolve --watch"
   },
   "dependencies": {
-    "@cloudware-casper/casper-icons": "^3.x",
-    "@cloudware-casper/casper-virtual-scroller": "^0.x",
+    "@toconline/casper-icons": "^3.x",
+    "@toconline/casper-virtual-scroller": "^0.x",
     "@polymer/paper-input": "^3.x",
     "@popperjs/core": "^2.x",
     "lit": "^2.x",
