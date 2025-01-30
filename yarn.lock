@@ -24,17 +24,17 @@
     js-tokens "^4.0.0"
 
 "@toconline/casper-icons@^3.x":
-  version "3.2.4"
-  resolved "https://npm.pkg.github.com/download/@toconline/casper-icons/3.2.4/d452d083556f87141c6de429cf2967a260feb4b3bbc1b9b0a4ff3327eb9066d0#1e684cd3cd88096e0e54fbce5882fc0a7ca2ac31"
-  integrity sha512-HqRsYQkX0CXQnRv3SPcWhchgJ4rX8PogfJ3JfMJyJ6d8p0Yz1u9az0VvTBU9W8qov3KfvIAHZmtSphq3UQKH2w==
+  version "3.2.6"
+  resolved "https://npm.pkg.github.com/download/@toconline/casper-icons/3.2.6/157a96d60ac922bbc38294b02c1de2b7617e4f36#157a96d60ac922bbc38294b02c1de2b7617e4f36"
+  integrity sha512-zl1H4WLCQP7poxEi5Uq1ZAY1EmbGUlAh0QoTloZ7f8ErVKg66/Q70GkgRuL7jnCySa7TWwOxj2wtHktuouksUw==
   dependencies:
     ink-ripple alex-saunders/ink-ripple
     lit "^2.x"
 
 "@toconline/casper-virtual-scroller@^0.x":
   version "0.2.0"
-  resolved "https://npm.pkg.github.com/download/@toconline/casper-virtual-scroller/0.2.0/ecba2274e6021db82fd21adfda617b9cfe7b4279#ecba2274e6021db82fd21adfda617b9cfe7b4279"
-  integrity sha512-yaT9u8pR3efQ3Judf7OoM6ffry/7v7+ecOzGeHu1AFpi605e/v/AQFIw/kPzLMdXTaXrsu4CaFM+0kzPsSdtsA==
+  resolved "https://npm.pkg.github.com/download/@toconline/casper-virtual-scroller/0.2.0/37d16e4b11eb5dc9787da09e5230867b1ad7c755#37d16e4b11eb5dc9787da09e5230867b1ad7c755"
+  integrity sha512-NrD6KNec9r/p08D/gfU8nlp+lDk4qjuxftCsQAwp3EkihODdjUajYSlyvnEa0Cp4H+ZB4edXp8dwykDPSrRVNw==
   dependencies:
     lit "^2.x"
     wc-spinners "^1.1.1"
